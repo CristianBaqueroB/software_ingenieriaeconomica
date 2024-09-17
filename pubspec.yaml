@@ -1,0 +1,71 @@
+name: software_ingenieriaeconomica
+
+description: A new Flutter project.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 0.0.1+1
+
+environment:
+  sdk: '>=2.19.4 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+    
+  curved_navigation_bar: ^1.0.6
+  english_words: ^4.0.0
+  provider: ^6.0.0
+  firebase_core: ^3.4.0
+  firebase_auth:  ^5.2.0
+  cloud_firestore: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: ture
+  ios: ture
+  image_path: "assets/img/Logo.png"
+
+
+ 
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/fonts/
+    - assets/img/Logo.png
+    - assets/img/FinteresSimple.png
+    - assets/img/Capitalis.png
+    - assets/img/Montois.png
+    - assets/img/Valorfuturois.png
+    - assets/img/Valorpresenteis.png
+    - assets/img/Tasainteresis.png
+    - assets/img/Tiempois.png
+    - assets/img/icMontocompuesto.png
+    - assets/img/icCapital.png
+    - assets/img/icTasainteres.png
+    - assets/img/icTiempo.png
+    - assets/img/FinteresCompuesto.png
+    - assets/img/VPGA.png 
+    - assets/img/VFGA.png 
+    - assets/img/VPGAI.png
+    - assets/img/FgradienteGeometrico.png
+    - assets/img/ValorPresentGIU.png
+    - assets/img/ValorFruturoGGP.png
+    - assets/img/ValorPresenteGI.png
+    - assets/img/ValorFuturoGI.png
+
+
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700

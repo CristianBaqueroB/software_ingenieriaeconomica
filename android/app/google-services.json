@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "983951072286",
+    "project_id": "software-ingeconomica",
+    "storage_bucket": "software-ingeconomica.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983951072286:android:2e514c4244b667f779220f",
+        "android_client_info": {
+          "package_name": "com.example.software_ingenieriaeconomica"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUHE6hIq3DkCDaJzbJ4m1D8N00Y7EXhYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
