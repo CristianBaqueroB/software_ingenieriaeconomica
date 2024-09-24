@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'dart:math'; // Import necesario para las funciones matemáticas
 
 class PeriodsCalculatorPage extends StatefulWidget {
   const PeriodsCalculatorPage({super.key});
@@ -25,19 +25,16 @@ class _PeriodsCalculatorPageState extends State<PeriodsCalculatorPage> {
 
       // Ajustar el cálculo según el tipo de tasa de interés
       double numPeriods;
-double growthFactor = futureAmount / initialCapital;  // El crecimiento total del capital (A / P)
+      double growthFactor = futureAmount / initialCapital; // El crecimiento total del capital (A / P)
 
-if (_interestRateType == 'Anual') {
-  // Fórmula para el número de períodos con tasa anual
-  numPeriods = log(growthFactor) / log(1 + rate);  // n = log(A / P) / log(1 + r)
-  print('El número de períodos calculado en años es: $numPeriods');
-} else {
-  // Si la tasa es mensual, convertimos el número de períodos a meses
-  double monthlyRate = rate / 12;  // Si es mensual, asegurarnos de que rate sea por mes (esto depende de cómo manejes las tasas)
-  numPeriods = log(growthFactor) / log(1 + monthlyRate);  // n = log(A / P) / log(1 + r mensual)
-  print('El número de períodos calculado en meses es: $numPeriods');
-}
-
+      if (_interestRateType == 'Anual') {
+        // Fórmula para el número de períodos con tasa anual
+        numPeriods = log(growthFactor) / log(1 + rate); // n = log(A / P) / log(1 + r)
+      } else {
+        // Si la tasa es mensual, convertimos el número de períodos a meses
+        double monthlyRate = rate / 12; // Aseguramos que rate sea por mes si es mensual
+        numPeriods = log(growthFactor) / log(1 + monthlyRate); // n = log(A / P) / log(1 + r mensual)
+      }
 
       setState(() {
         _numberOfPeriods = numPeriods;
@@ -97,6 +94,7 @@ if (_interestRateType == 'Anual') {
               ),
             ),
             SizedBox(height: 10),
+            // Menú desplegable para el tipo de tasa de interés
             DropdownButton<String>(
               value: _interestRateType,
               onChanged: (String? newValue) {
@@ -147,7 +145,7 @@ if (_interestRateType == 'Anual') {
             if (_numberOfPeriods != null) ...[
               SizedBox(height: 10),
               Text(
-                "Número de Períodos (${_interestRateType == 'Anual' ? 'Años' : 'Meses'}): ${_numberOfPeriods!.toStringAsFixed(2)}",
+                "Número de Períodos: ${_numberOfPeriods!.toStringAsFixed(2)}",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

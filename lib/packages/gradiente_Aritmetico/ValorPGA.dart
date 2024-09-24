@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math'; // Importar para usar pow
+import 'package:intl/intl.dart'; // Importar para formatear el resultado
 
 class PresentValueArithmeticGradientPage extends StatefulWidget {
   const PresentValueArithmeticGradientPage({super.key});
@@ -11,61 +12,103 @@ class PresentValueArithmeticGradientPage extends StatefulWidget {
 class _PresentValueArithmeticGradientPageState extends State<PresentValueArithmeticGradientPage> {
   final _initialPaymentController = TextEditingController();
   final _gradientController = TextEditingController();
-  final _timeController = TextEditingController();
+  final _yearsController = TextEditingController();
+  final _monthsController = TextEditingController();
+  final _daysController = TextEditingController();
   final _interestRateController = TextEditingController();
-  String _interestRateUnit = "Anual"; // Unidad de tasa de interés por defecto: Anual
-  String _timeUnit = "Meses"; // Unidad de tiempo por defecto: Meses
+
+  String _interestRateType = "Nominal Anual";
   double? _calculatedPresentValue;
 
   void _calculatePresentValue() {
     final initialPayment = double.tryParse(_initialPaymentController.text);
     final gradient = double.tryParse(_gradientController.text);
-    final time = double.tryParse(_timeController.text);
+    final years = double.tryParse(_yearsController.text) ?? 0;
+    final months = double.tryParse(_monthsController.text) ?? 0;
+    final days = double.tryParse(_daysController.text) ?? 0;
     final interestRate = double.tryParse(_interestRateController.text);
 
-    if (initialPayment != null && gradient != null && time != null && interestRate != null) {
-      double timeInPeriods;
-      double interestRateDecimal;
+    // Validación de campos
+    if (initialPayment == null || gradient == null || interestRate == null) {
+      _showError("Por favor, ingrese todos los campos correctamente.");
+      return;
+    }
 
-      // Convertir el tiempo a períodos dependiendo de la unidad seleccionada
-      if (_timeUnit == "Años") {
-        timeInPeriods = time * 12; // Convertir años a meses
-      } else {
-        timeInPeriods = time; // Si ya está en meses
-      }
+    // Convertir el tiempo a años
+    final totalTimeInYears = years + months / 12 + days / 365;
 
-      // Convertir la tasa de interés a decimal
-      if (_interestRateUnit == "Mensual") {
-        interestRateDecimal = interestRate / 100; // Tasa mensual ya está en formato decimal
-      } else {
-        // Si la tasa es anual, convertirla a mensual
+    // Convertir la tasa de interés según el tipo seleccionado
+    double interestRateDecimal;
+    switch (_interestRateType) {
+      case "Nominal Anual":
         interestRateDecimal = (interestRate / 100) / 12;
-      }
+        break;
+      case "Efectiva Anual":
+        interestRateDecimal = pow(1 + (interestRate / 100), 1 / 12) - 1;
+        break;
+      case "Efectiva Mensual":
+        interestRateDecimal = interestRate / 100;
+        break;
+      case "Tasa Periódica":
+        interestRateDecimal = interestRate / 100;
+        break;
+      default:
+        interestRateDecimal = interestRate / 100;
+    }
 
-      final i = interestRateDecimal;
-      final n = timeInPeriods;
+    final i = interestRateDecimal;
+    final n = totalTimeInYears * 12;
 
-      // Calcular el valor presente usando la fórmula proporcionada
-      final term1 = (pow(1 + i, n) - 1) / (i * pow(1 + i, n));
-      final term2 = (pow(1 + i, n) - 1) / (i * pow(1 + i, n)) - (n / pow(1 + i, n));
-      final presentValue = (initialPayment * term1) + (gradient / i * term2);
-
+    // Manejo de tasa de interés cero
+    if (i == 0) {
+      final presentValue = initialPayment * n + gradient * (n * (n + 1) / 2);
       setState(() {
         _calculatedPresentValue = presentValue;
       });
+      return;
     }
+
+    // Calcular el valor presente usando la fórmula del gradiente aritmético
+    final term1 = (pow(1 + i, n) - 1) / (i * pow(1 + i, n));
+    final term2 = (pow(1 + i, n) - 1) / (i * pow(1 + i, n)) - (n / pow(1 + i, n));
+    final presentValue = (initialPayment * term1) + (gradient / i * term2);
+
+    setState(() {
+      _calculatedPresentValue = presentValue;
+    });
   }
 
   void _clearFields() {
     setState(() {
       _initialPaymentController.clear();
       _gradientController.clear();
-      _timeController.clear();
+      _yearsController.clear();
+      _monthsController.clear();
+      _daysController.clear();
       _interestRateController.clear();
-      _interestRateUnit = "Anual"; // Restablecer la unidad por defecto
-      _timeUnit = "Meses"; // Restablecer la unidad por defecto
-      _calculatedPresentValue = null; // Limpiar el resultado
+      _interestRateType = "Nominal Anual";
+      _calculatedPresentValue = null;
     });
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Aceptar"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -97,15 +140,61 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _timeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Número de Períodos (n)',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 10),
+            Card(
+              elevation: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Tiempo:",
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _yearsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Años',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _monthsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Meses',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _daysController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Días',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
+
             SizedBox(height: 10),
             TextField(
               controller: _interestRateController,
@@ -119,7 +208,7 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
             Row(
               children: [
                 Text(
-                  "Unidad de Tiempo: ",
+                  "Tasa de Interés: ",
                   style: TextStyle(
                     fontSize: 18,
                     fontFamily: 'Roboto',
@@ -127,8 +216,13 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
                 ),
                 SizedBox(width: 10),
                 DropdownButton<String>(
-                  value: _timeUnit,
-                  items: <String>["Meses", "Años"].map<DropdownMenuItem<String>>((String value) {
+                  value: _interestRateType,
+                  items: <String>[
+                    "Nominal Anual",
+                    "Efectiva Anual",
+                    "Efectiva Mensual",
+                    "Tasa Periódica"
+                  ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -136,34 +230,7 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
                   }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
-                      _timeUnit = newValue!;
-                    });
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  "Unidad Tasa Interés: ",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-                SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: _interestRateUnit,
-                  items: <String>["Anual", "Mensual"].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _interestRateUnit = newValue!;
+                      _interestRateType = newValue!;
                     });
                   },
                 ),
@@ -190,7 +257,7 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
                   onPressed: _clearFields,
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Colors.red, // Cambia el color del botón de limpiar
+                    backgroundColor: Colors.red,
                     padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
                     textStyle: TextStyle(
                       fontSize: 18,
@@ -201,17 +268,15 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
                 ),
               ],
             ),
-            if (_calculatedPresentValue != null) ...[
-              SizedBox(height: 20),
+            const SizedBox(height: 20),
+            if (_calculatedPresentValue != null)
               Text(
-                "Valor Presente: \$${_calculatedPresentValue!.toStringAsFixed(2)}",
+                "Valor Presente: ${NumberFormat.simpleCurrency().format(_calculatedPresentValue)}",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Roboto',
                 ),
               ),
-            ],
           ],
         ),
       ),

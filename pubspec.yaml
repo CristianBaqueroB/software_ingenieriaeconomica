@@ -21,6 +21,7 @@ dependencies:
   firebase_auth:  ^5.2.0
   cloud_firestore: ^5.0.0
   flutter_launcher_icons: ^0.13.1
+  intl: ^0.19.0
 
 flutter_launcher_icons:
   android: ture

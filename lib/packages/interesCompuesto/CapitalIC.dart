@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter/material.dart';
 
 class CapitalICPage extends StatefulWidget {
   const CapitalICPage({super.key});
@@ -11,46 +11,71 @@ class CapitalICPage extends StatefulWidget {
 class _CapitalICPageState extends State<CapitalICPage> {
   final _futureAmountController = TextEditingController();
   final _interestRateController = TextEditingController();
-  final _timeController = TextEditingController();
-  String _timeUnit = "Años"; // Valor por defecto: Años
-  double? _initialCapital;
+  final _yearsController = TextEditingController();
+  final _monthsController = TextEditingController();
+  final _daysController = TextEditingController();
+  String _interestRateType = "Anual"; // Tipo de tasa de interés (Anual, Mensual, etc.)
+  double? _calculatedCapital;
 
   void _calculateCapital() {
     final futureAmount = double.tryParse(_futureAmountController.text);
     final interestRate = double.tryParse(_interestRateController.text);
-    final time = double.tryParse(_timeController.text);
+    final years = double.tryParse(_yearsController.text) ?? 0;
+    final months = double.tryParse(_monthsController.text) ?? 0;
+    final days = double.tryParse(_daysController.text) ?? 0;
 
-    if (futureAmount != null && interestRate != null && time != null && time != 0) {
-      double timeInYears;
+    if (futureAmount != null && interestRate != null && interestRate != 0) {
+      // Convertir tiempo a años
+      final timeInYears = years;
+      final timeInYearsMonths = months / 12;
+      final timeInYearsDays = days / 365;
 
-      // Convertir tiempo a años si la unidad seleccionada es "Meses"
-      if (_timeUnit == "Meses") {
-        timeInYears = time / 12;
-      } else {
-        timeInYears = time;
+      // Calcular el tiempo total en años
+      final totalTimeInYears = timeInYears + timeInYearsMonths + timeInYearsDays;
+
+      // Calcular el periodo de inversión (PI) según el tipo de tasa
+      double adjustedInterestRate;
+      int periods;
+      switch (_interestRateType) {
+        case "Mensual":
+          adjustedInterestRate = (interestRate / 100) ;
+          periods = (totalTimeInYears *12).round(); // Multiplicar por 12 meses en un año
+          break;
+        case "Bimestral":
+          adjustedInterestRate = (interestRate / 100) ;
+          periods = (totalTimeInYears * 6).round(); // Multiplicar por 6 bimestres en un año
+          break;
+        case "Trimestral":
+          adjustedInterestRate = (interestRate / 100) ;
+          periods = (totalTimeInYears * 4).round(); // Multiplicar por 4 trimestres en un año
+          break;
+        case "Semestral":
+          adjustedInterestRate = (interestRate / 100) ;
+          periods = (totalTimeInYears * 2).round(); // Multiplicar por 2 semestres en un año
+          break;
+        default:
+          adjustedInterestRate = interestRate / 100; // Tasa anual
+          periods = totalTimeInYears.round(); // Para anual, el número de períodos es igual a los años
       }
 
-      // Convertir porcentaje a decimal
-      final rateDecimal = interestRate / 100;
+      // Calcular el capital inicial usando la fórmula de interés compuesto
+      final capital = futureAmount / pow((1 + adjustedInterestRate), periods);
 
-      // Calcular capital inicial usando la fórmula: Capital = Monto Futuro / (1 + Tasa)^Tiempo
-      final capital = futureAmount / pow(1 + rateDecimal, timeInYears);
       setState(() {
-        _initialCapital = capital;
-      });
-    } else {
-      setState(() {
-        _initialCapital = null; // Asegurarse de limpiar el resultado si los datos son inválidos
+        _calculatedCapital = capital;
       });
     }
   }
 
   void _clearFields() {
-    _futureAmountController.clear();
-    _interestRateController.clear();
-    _timeController.clear();
     setState(() {
-      _initialCapital = null;
+      _futureAmountController.clear();
+      _interestRateController.clear();
+      _yearsController.clear();
+      _monthsController.clear();
+      _daysController.clear();
+      _interestRateType = "Anual"; // Restablecer el tipo de tasa por defecto
+      _calculatedCapital = null; // Limpiar el resultado
     });
   }
 
@@ -58,93 +83,152 @@ class _CapitalICPageState extends State<CapitalICPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Calcular Capital Inicial"),
+        title: const Text("Calcular Capital Inicial"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: _futureAmountController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Monto Futuro',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: _interestRateController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Tasa de Interés (%)',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _timeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Tiempo',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 10),
+            Card(
+              elevation: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Tiempo:",
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _yearsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Años',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _monthsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Meses',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _daysController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Días',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  "Unidad de Tiempo: ",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontFamily: 'Roboto',
-                  ),
+            const SizedBox(height: 20),
+            const Text(
+              "Tipo de Tasa de Interés:",
+              style: TextStyle(fontSize: 18, fontFamily: 'Roboto'),
+            ),
+            const SizedBox(height: 10),
+            DropdownButton<String>(
+              value: _interestRateType,
+              items: const [
+                DropdownMenuItem(
+                  value: "Anual",
+                  child: Text("Anual"),
                 ),
-                SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: _timeUnit,
-                  items: <String>["Años", "Meses"].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _timeUnit = newValue!;
-                    });
-                  },
+                DropdownMenuItem(
+                  value: "Mensual",
+                  child: Text("Mensual"),
+                ),
+                DropdownMenuItem(
+                  value: "Bimestral",
+                  child: Text("Bimestral"),
+                ),
+                DropdownMenuItem(
+                  value: "Trimestral",
+                  child: Text("Trimestral"),
+                ),
+                DropdownMenuItem(
+                  value: "Semestral",
+                  child: Text("Semestral"),
                 ),
               ],
+              onChanged: (value) {
+                setState(() {
+                  _interestRateType = value!;
+                });
+              },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               children: [
                 ElevatedButton(
                   onPressed: _calculateCapital,
-                  child: Text("Calcular"),
+                  child: const Text("Calcular"),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    textStyle: TextStyle(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 20.0,
+                    ),
+                    textStyle: const TextStyle(
                       fontSize: 18,
                       fontFamily: 'Roboto',
                     ),
                   ),
                 ),
-                SizedBox(width: 80), 
-                 // Espacio entre los botones
+                const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: _clearFields,
-                  child: Text("Limpiar"),
+                  child: const Text("Limpiar"),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    textStyle: TextStyle(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 20.0,
+                    ),
+                    textStyle: const TextStyle(
                       fontSize: 18,
                       fontFamily: 'Roboto',
                     ),
@@ -152,11 +236,11 @@ class _CapitalICPageState extends State<CapitalICPage> {
                 ),
               ],
             ),
-            if (_initialCapital != null) ...[
-              SizedBox(height: 10),
+            if (_calculatedCapital != null) ...[
+              const SizedBox(height: 10),
               Text(
-                "Capital Inicial: ${_initialCapital!.toStringAsFixed(2)}",
-                style: TextStyle(
+                "Capital Inicial: ${_calculatedCapital!.toStringAsFixed(2)}",
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Roboto',
