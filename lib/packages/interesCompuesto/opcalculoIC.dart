@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:software_ingenieriaeconomica/packages/interesCompuesto/CapitalIC.dart';
 import 'package:software_ingenieriaeconomica/packages/interesCompuesto/InterescompuestoIC.dart';
 import 'package:software_ingenieriaeconomica/packages/interesCompuesto/MoncocompuestoIC.dart';
+import 'package:software_ingenieriaeconomica/packages/interesCompuesto/TasainteresIC.dart';
 import 'package:software_ingenieriaeconomica/packages/interesCompuesto/numeroperiodoIC.dart';
-import 'package:software_ingenieriaeconomica/packages/interesSimple/tasainteresIs.dart';
+
 
 class InterestCompuestoPage extends StatelessWidget {
   const InterestCompuestoPage({super.key});

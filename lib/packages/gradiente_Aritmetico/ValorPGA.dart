@@ -175,7 +175,6 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
               children: [
                 ElevatedButton(
                   onPressed: _calculatePresentValue,
-                  child: Text("Calcular"),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.blue,
@@ -185,6 +184,7 @@ class _PresentValueArithmeticGradientPageState extends State<PresentValueArithme
                       fontFamily: 'Roboto',
                     ),
                   ),
+                  child: Text("Calcular"),
                 ),
                 ElevatedButton(
                   onPressed: _clearFields,

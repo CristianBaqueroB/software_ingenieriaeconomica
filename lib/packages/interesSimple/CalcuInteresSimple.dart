@@ -4,34 +4,40 @@ class SimpleInterestCalculationPage extends StatefulWidget {
   const SimpleInterestCalculationPage({super.key});
 
   @override
-  _SimpleInterestCalculationPageState createState() => _SimpleInterestCalculationPageState();
+  SimpleInterestCalculationPageState createState() => SimpleInterestCalculationPageState();
 }
 
-class _SimpleInterestCalculationPageState extends State<SimpleInterestCalculationPage> {
+class SimpleInterestCalculationPageState extends State<SimpleInterestCalculationPage> {
   final _capitalController = TextEditingController();
   final _rateController = TextEditingController();
-  final _timeController = TextEditingController();
-  String _timeUnit = "Años"; // Valor por defecto: Años
+  final _yearsController = TextEditingController();
+  final _monthsController = TextEditingController();
+  final _daysController = TextEditingController();
   double? _result;
+  String _rateType = 'Anual'; // Valor por defecto para la tasa de interés
 
   void _calculateInterest() {
     final capital = double.tryParse(_capitalController.text) ?? 0;
     final rate = double.tryParse(_rateController.text) ?? 0;
-    final time = double.tryParse(_timeController.text) ?? 0;
 
-    double timeInYears;
+    final years = double.tryParse(_yearsController.text) ?? 0;
+    final months = double.tryParse(_monthsController.text) ?? 0;
+    final days = double.tryParse(_daysController.text) ?? 0;
 
-    // Convertir tiempo a años dependiendo de la unidad seleccionada
-    if (_timeUnit == "Meses") {
-      timeInYears = time / 12;
-    } else if (_timeUnit == "Días") {
-      timeInYears = time / 365;
+    // Convertir tiempo a años: meses a fracción de año y días a fracción de año
+    final timeInYears = (years + (months / 12) + (days / 365));
+
+    // Convertir tasa de porcentaje a decimal y ajustar según si es anual o mensual
+    double rateInDecimal;
+    if (_rateType == 'Anual') {
+      rateInDecimal = rate / 100;
     } else {
-      timeInYears = time;
+      rateInDecimal = (rate / 12) / 100;
     }
 
     setState(() {
-      _result = capital * rate * timeInYears;
+      // Fórmula de interés simple: Interés = Capital * Tasa * Tiempo
+      _result = capital * rateInDecimal * timeInYears;
     });
   }
 
@@ -39,9 +45,11 @@ class _SimpleInterestCalculationPageState extends State<SimpleInterestCalculatio
     setState(() {
       _capitalController.clear();
       _rateController.clear();
-      _timeController.clear();
-      _timeUnit = "Años"; // Restablecer a la unidad por defecto
+      _yearsController.clear();
+      _monthsController.clear();
+      _daysController.clear();
       _result = null; // Limpiar el resultado
+      _rateType = 'Anual'; // Restablecer la tasa por defecto
     });
   }
 
@@ -61,27 +69,23 @@ class _SimpleInterestCalculationPageState extends State<SimpleInterestCalculatio
               keyboardType: TextInputType.number,
               decoration: InputDecoration(labelText: "Capital"),
             ),
+            SizedBox(height: 10),
             TextField(
               controller: _rateController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Tasa de Interés (en decimal)"),
-            ),
-            TextField(
-              controller: _timeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Tiempo"),
+              decoration: InputDecoration(labelText: "Tasa de Interés (%)"),
             ),
             SizedBox(height: 10),
             Row(
               children: [
                 Text(
-                  "Unidad de Tiempo: ",
+                  "Tasa de Interés: ",
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(width: 10),
                 DropdownButton<String>(
-                  value: _timeUnit,
-                  items: <String>["Años", "Meses", "Días"].map<DropdownMenuItem<String>>((String value) {
+                  value: _rateType,
+                  items: <String>['Anual', 'Mensual'].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -89,11 +93,65 @@ class _SimpleInterestCalculationPageState extends State<SimpleInterestCalculatio
                   }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
-                      _timeUnit = newValue!;
+                      _rateType = newValue!;
                     });
                   },
                 ),
               ],
+            ),
+            SizedBox(height: 10),
+            // Card para ingresar años, meses y días
+            Card(
+              elevation: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Tiempo:",
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _yearsController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Años',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _monthsController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Meses',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _daysController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Días',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
             SizedBox(height: 20),
             Row(
@@ -116,7 +174,7 @@ class _SimpleInterestCalculationPageState extends State<SimpleInterestCalculatio
             if (_result != null) ...[
               SizedBox(height: 20),
               Text(
-                "Interés Simple: ${_result!.toStringAsFixed(2)}",
+                "Interés Simple: \$${_result!.toStringAsFixed(2)}",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ],

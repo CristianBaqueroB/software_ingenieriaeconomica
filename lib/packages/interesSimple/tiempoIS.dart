@@ -11,28 +11,47 @@ class _TimePageState extends State<TimePage> {
   final _initialCapitalController = TextEditingController();
   final _interestRateController = TextEditingController();
   final _futureAmountController = TextEditingController();
+  final _generatedInterestController = TextEditingController();
   double? _time;
-  String _interestFrequency = "Anual"; // Valor por defecto: Anual
+  String _timeUnit = "Años"; // Unidad de tiempo por defecto
+  String _rateType = "Anual"; // Tipo de tasa por defecto
 
   void _calculateTime() {
     final initialCapital = double.tryParse(_initialCapitalController.text);
-    final interestRate = double.tryParse(_interestRateController.text);
-    final futureAmount = double.tryParse(_futureAmountController.text);
+    final rate = double.tryParse(_interestRateController.text);
+    final futureAmount = double.tryParse(_futureAmountController.text) ?? 0;
+    final generatedInterest = double.tryParse(_generatedInterestController.text) ?? 0;
 
-    if (initialCapital != null && interestRate != null && futureAmount != null && initialCapital != 0) {
-      // Convert percentage to decimal
-      final rateDecimal = interestRate / 100;
+    if (initialCapital != null && rate != null && initialCapital != 0) {
+      // Usar el interés generado si se proporciona, de lo contrario calcularlo
+      double intGenerado = generatedInterest > 0 ? generatedInterest : futureAmount - initialCapital;
+
+      // Validar que el interés generado no sea negativo
+      if (intGenerado < 0) {
+        setState(() {
+          _time = null; // Limpiar el resultado si los datos son inválidos
+        });
+        return;
+      }
+
+      // Convertir la tasa de interés a decimal
+      double rateInDecimal;
+      if (_rateType == 'Anual') {
+        rateInDecimal = rate / 100;
+      } else {
+        rateInDecimal = (rate /100) / 12; // Para tasa mensual
+      }
 
       double time;
 
-      if (_interestFrequency == "Mensual") {
-        // Convert annual rate to monthly rate
-        final monthlyRateDecimal = rateDecimal / 12;
-        // Calculate time in months
-        time = (futureAmount / initialCapital - 1) / monthlyRateDecimal;
+      // Realizar cálculo basado en la unidad de tiempo seleccionada
+      if (_timeUnit == "Años") {
+        time = (intGenerado / initialCapital) / rateInDecimal;
+      } else if (_timeUnit == "Meses") {
+        time = (12*intGenerado / initialCapital) / rateInDecimal;
       } else {
-        // Calculate time in years
-        time = (futureAmount / initialCapital - 1) / rateDecimal;
+        // Si la unidad seleccionada es 'Días'
+        time = (365 * (intGenerado / initialCapital)) / rateInDecimal;
       }
 
       setState(() {
@@ -40,7 +59,7 @@ class _TimePageState extends State<TimePage> {
       });
     } else {
       setState(() {
-        _time = null; // Asegurarse de limpiar el resultado si los datos son inválidos
+        _time = null; // Limpiar el resultado si los datos son inválidos
       });
     }
   }
@@ -49,6 +68,7 @@ class _TimePageState extends State<TimePage> {
     _initialCapitalController.clear();
     _interestRateController.clear();
     _futureAmountController.clear();
+    _generatedInterestController.clear();
     setState(() {
       _time = null;
     });
@@ -88,7 +108,16 @@ class _TimePageState extends State<TimePage> {
               controller: _futureAmountController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Monto Futuro',
+                labelText: 'Monto Final',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _generatedInterestController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Interés Generado',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -96,7 +125,7 @@ class _TimePageState extends State<TimePage> {
             Row(
               children: [
                 const Text(
-                  "Frecuencia de Interés: ",
+                  "Unidad de Tiempo: ",
                   style: TextStyle(
                     fontSize: 18,
                     fontFamily: 'Roboto',
@@ -104,7 +133,35 @@ class _TimePageState extends State<TimePage> {
                 ),
                 const SizedBox(width: 10),
                 DropdownButton<String>(
-                  value: _interestFrequency,
+                  value: _timeUnit,
+                  items: <String>["Años", "Meses", "Días"]
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _timeUnit = newValue!;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Text(
+                  "Tipo de Tasa: ",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                DropdownButton<String>(
+                  value: _rateType,
                   items: <String>["Anual", "Mensual"]
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
@@ -114,7 +171,7 @@ class _TimePageState extends State<TimePage> {
                   }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
-                      _interestFrequency = newValue!;
+                      _rateType = newValue!;
                     });
                   },
                 ),
@@ -155,7 +212,7 @@ class _TimePageState extends State<TimePage> {
             if (_time != null) ...[
               const SizedBox(height: 20),
               Text(
-                "Tiempo Necesario: ${_time!.toStringAsFixed(2)} ${_interestFrequency == 'Mensual' ? 'meses' : 'años'}",
+                "Tiempo Necesario: ${_time!.toStringAsFixed(2)} $_timeUnit",
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

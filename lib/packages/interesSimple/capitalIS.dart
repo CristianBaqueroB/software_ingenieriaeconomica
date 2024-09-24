@@ -5,10 +5,10 @@ class CapitalPage extends StatefulWidget {
 
   @override
  
-  _CapitalPageState createState() => _CapitalPageState();
+  CapitalPageState createState() => CapitalPageState();
 }
 
-class _CapitalPageState extends State<CapitalPage> {
+class CapitalPageState extends State<CapitalPage> {
   final _futureAmountController = TextEditingController();
   final _interestRateController = TextEditingController();
   final _yearsController = TextEditingController();
@@ -87,7 +87,7 @@ class _CapitalPageState extends State<CapitalPage> {
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 5),
             // Card para ingresar años, meses y días
             Card(
               elevation: 6,

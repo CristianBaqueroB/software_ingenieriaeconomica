@@ -1,38 +1,42 @@
 import 'package:flutter/material.dart';
 
-class InterestRatePage extends StatefulWidget {
-  const InterestRatePage({super.key});
+class InterestRatePageIS extends StatefulWidget {
+  const InterestRatePageIS({super.key});
 
   @override
-  _InterestRatePageState createState() => _InterestRatePageState();
+  InterestRatePageState createState() => InterestRatePageState();
 }
 
-class _InterestRatePageState extends State<InterestRatePage> {
+class InterestRatePageState extends State<InterestRatePageIS> {
   final _initialCapitalController = TextEditingController();
   final _futureAmountController = TextEditingController();
-  final _timeController = TextEditingController();
-  String _timeUnit = "Años"; // Valor por defecto: Años
+  final _yearsController = TextEditingController();
+  final _monthsController = TextEditingController();
+  final _daysController = TextEditingController();
   double? _interestRate;
 
   void _calculateInterestRate() {
     final initialCapital = double.tryParse(_initialCapitalController.text);
     final futureAmount = double.tryParse(_futureAmountController.text);
-    final time = double.tryParse(_timeController.text);
+    final years = double.tryParse(_yearsController.text) ?? 0;
+    final months = double.tryParse(_monthsController.text) ?? 0;
+    final days = double.tryParse(_daysController.text) ?? 0;
 
-    if (initialCapital != null && futureAmount != null && time != null && time != 0) {
-      double timeInYears;
+    // Convertir todo a años
+    double timeInYears = years + (months / 12) + (days / 365);
 
-      // Convertir tiempo a años si la unidad seleccionada es "Meses"
-      if (_timeUnit == "Meses") {
-        timeInYears = time / 12;
-      } else {
-        timeInYears = time;
-      }
-
-      // Calcular tasa de interés usando la fórmula: Tasa = (Monto Futuro - Capital) / (Capital * Tiempo)
-      final rate = (futureAmount - initialCapital) / (initialCapital * timeInYears) * 100;
+    if (initialCapital != null && futureAmount != null && timeInYears > 0) {
+      // Calcular tasa de interés
+      final rate = (futureAmount / initialCapital) ;
+      final rate1=rate-1;
+      final rate2=rate1/ timeInYears  ;
+      final rate3=rate2*100; // Convertir a porcentaje
       setState(() {
-        _interestRate = rate;
+        _interestRate = rate3;
+      });
+    } else {
+      setState(() {
+        _interestRate = null; // Limpiar resultado si los datos son inválidos
       });
     }
   }
@@ -40,7 +44,9 @@ class _InterestRatePageState extends State<InterestRatePage> {
   void _clearFields() {
     _initialCapitalController.clear();
     _futureAmountController.clear();
-    _timeController.clear();
+    _yearsController.clear();
+    _monthsController.clear();
+    _daysController.clear();
     setState(() {
       _interestRate = null;
     });
@@ -50,92 +56,110 @@ class _InterestRatePageState extends State<InterestRatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Calcular Tasa de Interés"),
+        title: const Text("Calcular Tasa de Interés"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: _initialCapitalController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Capital Inicial',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: _futureAmountController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Monto Futuro',
+              decoration: const InputDecoration(
+                labelText: 'Monto Final',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _timeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Tiempo',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 10),
+            // Card para ingresar años, meses y días
+            Card(
+              elevation: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Tiempo:",
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _yearsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Años',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _monthsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Meses',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _daysController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Días',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  "Unidad de Tiempo: ",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-                SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: _timeUnit,
-                  items: <String>["Años", "Meses"].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _timeUnit = newValue!;
-                    });
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               children: [
                 ElevatedButton(
                   onPressed: _calculateInterestRate,
-                  child: Text("Tasa de Interés"),
+                  child: const Text("Tasa de Interés"),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    textStyle: TextStyle(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    textStyle: const TextStyle(
                       fontSize: 18,
                       fontFamily: 'Roboto',
                     ),
                   ),
                 ),
-                SizedBox(width: 20),
+                const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: _clearFields,
-                  child: Text("Limpiar"),
+                  child: const Text("Limpiar"),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    textStyle: TextStyle(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    textStyle: const TextStyle(
                       fontSize: 18,
                       fontFamily: 'Roboto',
                     ),
@@ -144,10 +168,10 @@ class _InterestRatePageState extends State<InterestRatePage> {
               ],
             ),
             if (_interestRate != null) ...[
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
                 "Tasa de Interés: ${_interestRate!.toStringAsFixed(2)} %",
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Roboto',

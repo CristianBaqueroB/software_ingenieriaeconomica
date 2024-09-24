@@ -120,7 +120,6 @@ class _PresentValueInfiniteGradientPageState extends State<PresentValueInfiniteG
               children: [
                 ElevatedButton(
                   onPressed: _calculatePresentValue,
-                  child: Text("Calcular"),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.blue,
@@ -130,6 +129,7 @@ class _PresentValueInfiniteGradientPageState extends State<PresentValueInfiniteG
                       fontFamily: 'Roboto',
                     ),
                   ),
+                  child: Text("Calcular"),
                 ),
                 ElevatedButton(
                   onPressed: _clearFields,
