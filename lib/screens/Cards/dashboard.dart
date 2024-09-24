@@ -55,7 +55,7 @@ class DashboardPage extends StatelessWidget {
 }
 
 class _CardItem extends StatelessWidget {
-  const _CardItem({super.key, required this.child});
+  const _CardItem({required this.child});
 
   final Widget child;
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:software_ingenieriaeconomica/screens/Cards/CalculationPage.dart';
 import 'package:software_ingenieriaeconomica/screens/Cards/dashboard.dart';
+import 'package:software_ingenieriaeconomica/screens/SolPrestamo.dart';
 import 'package:software_ingenieriaeconomica/services/SettingsPage.dart'; // Importa SettingsPage
 
 class HomePage extends StatefulWidget {
@@ -20,12 +21,15 @@ class _HomePageState extends State<HomePage> {
     Icon(Icons.home),
     Icon(Icons.calculate),
     Icon(Icons.settings),
+    Icon(Icons.request_page),
   ];
 
   final List<Color> _bgColors = [
     Color.fromRGBO(255, 255, 255, 1),
     Color.fromRGBO(255, 255, 255, 1),
     Color.fromRGBO(255, 255, 255, 1),
+    Color.fromRGBO(255, 255, 255, 1),
+    
     Color.fromRGBO(255, 255, 255, 1),
   ];
 
@@ -127,6 +131,38 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
+
+               SizedBox(height: 20),
+              Card(
+                elevation: 14.0,
+                margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 13.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Solicitud y Gestión de Préstamos",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Roboto',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "Utiliza nuestras herramientas para calcular el interés simple, compuesto, y gradientes financieros.",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: 'Roboto',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -134,6 +170,8 @@ class _HomePageState extends State<HomePage> {
         return CalculationPage();
       case 3:
         return SettingsPage(); // Cambia a SettingsPage aquí
+      case 4:
+        return  SolicitudPrestamo(); 
       default:
         return Center(child: Text("Página no encontrada", style: TextStyle(fontFamily: 'Roboto')));
     }
