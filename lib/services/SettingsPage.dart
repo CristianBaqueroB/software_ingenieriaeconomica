@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:software_ingenieriaeconomica/screens/login_screen.dart'; // Asegúrate de que la ruta es correcta
 
 class SettingsPage extends StatelessWidget {
+  // ignore: use_super_parameters
   const SettingsPage({Key? key}) : super(key: key);
 
   Future<void> _signOut(BuildContext context) async {
@@ -67,8 +70,7 @@ class SettingsPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(25.0),
               ),
               child: ElevatedButton(
-                onPressed: () => _signOut(context), // Llama al método _signOut
-                child: Text('Cerrar sesión'),
+                onPressed: () => _signOut(context),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Color.fromARGB(255, 127, 174, 212),
@@ -77,7 +79,8 @@ class SettingsPage extends StatelessWidget {
                     fontSize: 18,
                     fontFamily: 'Roboto',
                   ),
-                ),
+                ), // Llama al método _signOut
+                child: Text('Cerrar sesión'),
               ),
             ),
           ],

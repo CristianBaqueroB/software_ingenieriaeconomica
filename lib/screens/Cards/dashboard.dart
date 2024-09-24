@@ -19,26 +19,26 @@ class DashboardPage extends StatelessWidget {
             delegate: SliverChildListDelegate(
               <Widget>[
                 _CardItem(
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity, // Ocupa todo el ancho disponible
                     child: const SimpleInterestPage(),
                   ),
                 ),
                 _CardItem(
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity, // Ocupa todo el ancho disponible
                     child: const CompoundInterestPage(),
                   ),
                 ),
                 _CardItem(
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity, // Ocupa todo el ancho disponible
                     child: const ArithmeticGradientPage(),
                   ),
 
                 ),
                 _CardItem(
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity, // Ocupa todo el ancho disponible
                     child:  const GeometricGradientPage(),
                   ),

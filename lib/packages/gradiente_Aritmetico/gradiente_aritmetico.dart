@@ -27,7 +27,7 @@ Tipos de Gradientes:
   Anticipado: Los pagos se realizan al final de cada período.
   Vencido: Los pagos se efectúan al inicio de cada período.
   Diferido: Los pagos comienzan después de un período de gracia.
-  Perpetuo: Los pagos continúan indefinidamente, con \( n \) tendiendo a infinito.
+  Perpetuo: Los pagos continúan indefinidamente, con ( n ) tendiendo a infinito.
                 """,
                 images: [
                   'assets/img/VFGA.png', // Imagen para la fórmula de Gradiente Aritmético

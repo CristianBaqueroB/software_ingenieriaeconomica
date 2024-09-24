@@ -5,10 +5,10 @@ class FutureValueArithmeticGradientPage extends StatefulWidget {
   const FutureValueArithmeticGradientPage({super.key});
 
   @override
-  _FutureValueArithmeticGradientPageState createState() => _FutureValueArithmeticGradientPageState();
+  FutureValueArithmeticGradientPageState createState() => FutureValueArithmeticGradientPageState();
 }
 
-class _FutureValueArithmeticGradientPageState extends State<FutureValueArithmeticGradientPage> {
+class FutureValueArithmeticGradientPageState extends State<FutureValueArithmeticGradientPage> {
   final _initialPaymentController = TextEditingController();
   final _gradientController = TextEditingController();
   final _timeController = TextEditingController();
