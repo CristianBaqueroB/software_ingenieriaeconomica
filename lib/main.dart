@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:software_ingenieriaeconomica/firebase_options.dart';
 
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:software_ingenieriaeconomica/services/AuthWrapper.dart';
 
