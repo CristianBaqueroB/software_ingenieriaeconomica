@@ -172,6 +172,7 @@ class SimpleInterestController extends ChangeNotifier {
           'tasaInteres': double.parse(rate.toStringAsFixed(2)), // Guardar la tasa de interés con 2 decimales
           'totalAPagar': double.parse(totalPayment.toStringAsFixed(2)), // Guardar con 2 decimales
           'estado': 'pendiente', // Estado inicial
+          'tipoPrestamo': 'interes_simple', // Nuevo campo para identificar el tipo de préstamo
           'fechaSolicitud': Timestamp.fromDate(solicitudDate),
           'fechaLimite': Timestamp.fromDate(deadlineDate),
           'tiempo': {

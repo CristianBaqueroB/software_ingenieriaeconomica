@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class Prestamo {
   final String id;
@@ -12,6 +11,7 @@ class Prestamo {
   final DateTime fechaSolicitud;
   final DateTime fechaLimite;
   final String estado;
+  final String tipoPrestamo; // Nuevo campo
   final int anios;
   final int meses;
   final int dias;
@@ -28,6 +28,7 @@ class Prestamo {
     required this.fechaSolicitud,
     required this.fechaLimite,
     required this.estado,
+    required this.tipoPrestamo, // Nuevo campo
     required this.anios,
     required this.meses,
     required this.dias,
@@ -45,6 +46,7 @@ class Prestamo {
       tasaInteres: data['tasaInteres']?.toDouble() ?? 0.0,
       totalAPagar: data['totalAPagar']?.toDouble() ?? 0.0,
       estado: data['estado'] ?? '',
+      tipoPrestamo: data['tipoPrestamo'] ?? 'desconocido', // Nuevo campo
       fechaSolicitud: (data['fechaSolicitud'] as Timestamp).toDate(),
       fechaLimite: (data['fechaLimite'] as Timestamp).toDate(),
       anios: data['tiempo']['anios'] ?? 0,
@@ -53,28 +55,3 @@ class Prestamo {
     );
   }
 }
-
-// Función para obtener el usuario autenticado
-String obtenerUsuarioId() {
-  User? user = FirebaseAuth.instance.currentUser;
-  return user?.uid ?? ""; // Devuelve el ID del usuario autenticado o una cadena vacía si no hay usuario autenticado
-}
-
-// Función para obtener préstamos filtrados por usuario autenticado
-Future<List<Prestamo>> obtenerPrestamosPorUsuario() async {
-  String usuarioId = obtenerUsuarioId(); // Obtiene el ID del usuario autenticado
-
-  if (usuarioId.isEmpty) {
-    return []; // Devuelve una lista vacía si no hay usuario autenticado
-  }
-
-  QuerySnapshot snapshot = await FirebaseFirestore.instance
-      .collection('loans')
-      .where('usuarioId', isEqualTo: usuarioId)
-      .orderBy('fechaSolicitud') // Eliminar 'ascending' porque se asume por defecto
-      .get();
-
-  return snapshot.docs.map((doc) => Prestamo.fromFirestore(doc)).toList();
-}
-
-

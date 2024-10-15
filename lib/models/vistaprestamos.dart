@@ -1,5 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// lib/screens/gestion_prestamos_page.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:software_ingenieriaeconomica/admin/controladmin/controllvistaprestamo.dart';
+import 'package:software_ingenieriaeconomica/admin/controladmin/modelvistasprestamos.dart';
 
 class GestionPrestamosPage extends StatefulWidget {
   @override
@@ -7,31 +10,100 @@ class GestionPrestamosPage extends StatefulWidget {
 }
 
 class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String _filtroEstado = 'todos'; // Estado por defecto
+  final LoanController _loanController = LoanController();
+  String _filtroEstado = 'todos';
+  Future<List<Loan>>? _loanListFuture;
 
-  Future<String> _getUserCedula(String usuarioId) async {
-    try {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(usuarioId).get();
-      return userDoc['cedula'] ?? 'Sin cédula';
-    } catch (e) {
-      print('Error al obtener la cédula del usuario: $e');
-      return 'Error';
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadLoans();
   }
 
-  Future<void> _updateLoanStatus(String loanId, String newStatus) async {
+  void _loadLoans() {
+    _loanListFuture = _loanController.fetchLoans(_filtroEstado);
+  }
+
+  void _updateLoanStatus(String loanId, String newStatus) async {
     try {
-      await _firestore.collection('loans').doc(loanId).update({'estado': newStatus});
+      await _loanController.updateLoanStatus(loanId, newStatus);
+      _loadLoans(); // Recargar préstamos
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Estado actualizado a: $newStatus')),
       );
     } catch (e) {
-      print('Error al actualizar el estado del préstamo: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al actualizar el estado.')),
       );
     }
+  }
+
+  Future<void> _editLoanDetails(BuildContext context, Loan loan) async {
+    final _interesController = TextEditingController(text: loan.interes.toString());
+    final _totalAPagarController = TextEditingController(text: loan.totalAPagar.toString());
+    final _cantidadPagadaController = TextEditingController(text: loan.cantidadPagada.toString());
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Editar Detalles del Préstamo'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Campos de edición
+                _buildTextField(_interesController, 'Interés'),
+                SizedBox(height: 10),
+                _buildTextField(_totalAPagarController, 'Total a Pagar'),
+                SizedBox(height: 10),
+                _buildTextField(_cantidadPagadaController, 'Cantidad Pagada por el Usuario'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Guardar'),
+              onPressed: () async {
+                // Guardar los cambios
+                double parsedInteres = double.parse(_interesController.text);
+                double parsedTotalAPagar = double.parse(_totalAPagarController.text);
+                double parsedCantidadPagada = double.parse(_cantidadPagadaController.text);
+
+                try {
+                  await _loanController.editLoanDetails(loan.id, parsedInteres, parsedTotalAPagar, parsedCantidadPagada);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Detalles del préstamo actualizados con éxito.')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al actualizar los detalles.')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.numberWithOptions(decimal: true),
+    );
   }
 
   @override
@@ -43,105 +115,78 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
       ),
       body: Column(
         children: [
-          // Filtro de estado
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: DropdownButton<String>(
+            child: DropdownButtonFormField<String>(
               value: _filtroEstado,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: 'Filtrar por estado',
+                border: OutlineInputBorder(),
+              ),
               items: [
                 DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                DropdownMenuItem(value: 'pendiente', child: Text('Pendientes')),
                 DropdownMenuItem(value: 'aceptado', child: Text('Aceptados')),
                 DropdownMenuItem(value: 'rechazado', child: Text('Rechazados')),
               ],
               onChanged: (value) {
                 setState(() {
                   _filtroEstado = value!;
+                  _loadLoans(); // Recargar préstamos con nuevo filtro
                 });
               },
             ),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('loans')
-                  .where('estado', isEqualTo: _filtroEstado == 'todos' ? null : _filtroEstado)
-                  .snapshots(),
+            child: FutureBuilder<List<Loan>>(
+              future: _loanListFuture,
               builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error al cargar las solicitudes.'));
-                }
-
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
 
-                final loanRequests = snapshot.data!.docs;
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error al cargar las solicitudes.'));
+                }
 
-                if (loanRequests.isEmpty) {
-                  return Center(child: Text('No hay solicitudes para mostrar.'));
+                final loans = snapshot.data ?? [];
+
+                if (loans.isEmpty) {
+                  return Center(child: Text('No hay préstamos disponibles.'));
                 }
 
                 return ListView.builder(
-                  itemCount: loanRequests.length,
+                  itemCount: loans.length,
                   itemBuilder: (context, index) {
-                    final request = loanRequests[index];
+                    final loan = loans[index];
 
-                    // Extraer solo los campos necesarios
-                    final estado = request['estado'] ?? 'Sin estado';
-                    final fechaSolicitud = request['fechaSolicitud']?.toDate() ?? DateTime.now();
-                    final interes = request['interes']?.toDouble() ?? 0.0;
-                    final montoPrestamo = request['montoPrestamo']?.toDouble() ?? 0.0;
-                    final totalAPagar = request['totalAPagar']?.toDouble() ?? 0.0;
-                    final usuarioId = request['usuarioId'] ?? 'Sin ID de usuario';
-                    final loanId = request.id; // Obtener el ID del préstamo
-
-                    // Usar FutureBuilder para obtener la cédula del usuario
-                    return FutureBuilder<String>(
-                      future: _getUserCedula(usuarioId),
-                      builder: (context, userSnapshot) {
-                        if (userSnapshot.connectionState == ConnectionState.waiting) {
-                          return ListTile(
-                            title: Text('Cargando información del usuario...'),
-                          );
-                        }
-
-                        final cedula = userSnapshot.data ?? 'Sin cédula';
-
-                        return Card(
-                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            title: Text('Estado: $estado'),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Cédula: $cedula'),
-                                Text('Fecha de Solicitud: ${fechaSolicitud.toLocal()}'),
-                                Text('Interés: \$${interes.toStringAsFixed(2)}'),
-                                Text('Monto del Préstamo: \$${montoPrestamo.toStringAsFixed(2)}'),
-                                Text('Total a Pagar: \$${totalAPagar.toStringAsFixed(2)}'),
-                              ],
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      child: ListTile(
+                        title: Text('Préstamo: ${loan.montoPrestamo}'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Estado: ${loan.estado}'),
+                            Text('Fecha de Solicitud: ${DateFormat('dd/MM/yyyy').format(loan.fechaSolicitud)}'),
+                            Text('Fecha Límite: ${DateFormat('dd/MM/yyyy').format(loan.fechaLimite)}'),
+                          ],
+                        ),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              onPressed: () => _editLoanDetails(context, loan),
                             ),
-                            isThreeLine: true,
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.check, color: Colors.green),
-                                  onPressed: () {
-                                    _updateLoanStatus(loanId, 'aceptado'); // Aceptar préstamo
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.close, color: Colors.red),
-                                  onPressed: () {
-                                    _updateLoanStatus(loanId, 'rechazado'); // Rechazar préstamo
-                                  },
-                                ),
-                              ],
+                            IconButton(
+                              icon: Icon(Icons.check),
+                              onPressed: () => _updateLoanStatus(loan.id, 'aceptado'),
                             ),
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     );
                   },
                 );

@@ -69,6 +69,13 @@ class _SimpleInterestPageState extends State<SimpleInterestPage> {
           children: [
             // Campos de datos del usuario
             _buildUserDataSection(),
+            const SizedBox(height: 10),
+
+            // Etiqueta para Tipo de Préstamo
+            Text(
+              'Tipo de Préstamo: Interés Simple',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+            ),
             const SizedBox(height: 20),
 
             // Campo de monto principal
