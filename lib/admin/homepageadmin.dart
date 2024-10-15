@@ -1,11 +1,10 @@
+// lib/admin/admin_homepage.dart
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:software_ingenieriaeconomica/screens/Cards/CalculationPage.dart';
-import 'package:software_ingenieriaeconomica/screens/Cards/dashboard.dart';
-import 'package:software_ingenieriaeconomica/screens/SolPrestamo.dart';
-import 'package:software_ingenieriaeconomica/services/SettingsPage.dart'; 
-//import 'package:software_ingenieriaeconomica/screens/admin/GestionUsuarios.dart'; // Página de gestión de usuarios
-//import 'package:software_ingenieriaeconomica/screens/admin/GestionPrestamos.dart'; // Página de gestión de préstamos
+import 'package:software_ingenieriaeconomica/admin/SettingsPageadmin.dart';
+import 'package:software_ingenieriaeconomica/models/vistaprestamos.dart';
+import 'package:software_ingenieriaeconomica/screens/Cards/dashboard.dart'; // Importa la nueva página de gestión de préstamos
+
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -16,19 +15,15 @@ class AdminHomePage extends StatefulWidget {
 
 class _AdminHomePageState extends State<AdminHomePage> {
   int _selectedIndex = 0;
-  Color _bgColor = Color.fromRGBO(228, 236, 228, 1);
+  Color _bgColor = Colors.white;
 
   final List<Widget> _navigationItems = [
-    Icon(Icons.dashboard),
-    Icon(Icons.people),       // Gestión de usuarios
-    Icon(Icons.request_page),  // Gestión de préstamos
-    Icon(Icons.calculate),     // Cálculos financieros
-    Icon(Icons.settings),      // Configuraciones
+    Icon(Icons.dashboard, size: 30),       // Dashboard
+    Icon(Icons.request_page, size: 30),    // Gestión de Préstamos
+    Icon(Icons.settings, size: 30),        // Configuraciones
   ];
 
   final List<Color> _bgColors = [
-    Colors.white,
-    Colors.white,
     Colors.white,
     Colors.white,
     Colors.white,
@@ -44,6 +39,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
         items: _navigationItems,
         index: _selectedIndex,
         height: 60,
+        color: Color.fromARGB(255, 133, 238, 159), // Color de la barra de navegación
+        buttonBackgroundColor: Color.fromARGB(255, 133, 238, 159),
         animationDuration: const Duration(milliseconds: 300),
         onTap: (index) {
           setState(() {
@@ -60,15 +57,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
       case 0:
         return DashboardPage();  // Página de dashboard
       case 1:
-       // return GestionUsuariosPage();  // Página de gestión de usuarios
+        return GestionPrestamosPage();  // Página de gestión de préstamos
       case 2:
-       // return GestionPrestamosPage();  // Página de gestión de préstamos
-      case 3:
-        return CalculationPage();  // Página de cálculos financieros
-      case 4:
-        return SettingsPage();  // Página de configuraciones
+        return SettingsPageAdmin();  // Página de configuraciones
       default:
-        return Center(child: Text("Página no encontrada", style: TextStyle(fontFamily: 'Roboto')));
+        return Center(
+          child: Text(
+            "Página no encontrada",
+            style: TextStyle(fontFamily: 'Roboto', fontSize: 18),
+          ),
+        );
     }
   }
 }

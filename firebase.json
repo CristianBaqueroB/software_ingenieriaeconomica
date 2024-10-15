@@ -1,1 +1,41 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"software-ingeconomica","appId":"1:983951072286:android:2e514c4244b667f779220f","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"software-ingeconomica","configurations":{"android":"1:983951072286:android:2e514c4244b667f779220f","ios":"1:983951072286:ios:f70a13406d263b5979220f","macos":"1:983951072286:ios:f70a13406d263b5979220f","web":"1:983951072286:web:ca67e971473b862b79220f","windows":"1:983951072286:web:e325d847c083165a79220f"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "software-ingeconomica",
+          "appId": "1:983951072286:android:2e514c4244b667f779220f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "software-ingeconomica",
+          "configurations": {
+            "android": "1:983951072286:android:2e514c4244b667f779220f",
+            "ios": "1:983951072286:ios:f70a13406d263b5979220f",
+            "macos": "1:983951072286:ios:f70a13406d263b5979220f",
+            "web": "1:983951072286:web:ca67e971473b862b79220f",
+            "windows": "1:983951072286:web:e325d847c083165a79220f"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

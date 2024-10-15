@@ -26,6 +26,27 @@ class RegisterPageState extends State<RegisterPage> {
     final email = _emailController.text;
     final password = _passwordController.text;
 
+    // Verificar si la cédula ya está registrada
+    final cedulaSnapshot = await _firestore.collection('users').where('cedula', isEqualTo: cedula).get();
+    if (cedulaSnapshot.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('La cédula ya está registrada.')),
+      );
+      return;
+    }
+
+    // Verificar si el correo electrónico ya está registrado
+    final emailSnapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
+    if (emailSnapshot.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('El correo electrónico ya está registrado.')),
+      );
+      return;
+    }
+
     try {
       // Crear el usuario en Firebase Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -36,12 +57,13 @@ class RegisterPageState extends State<RegisterPage> {
       // Obtener el UID del usuario
       final uid = userCredential.user!.uid;
 
-      // Guardar información adicional en Firestore usando la cédula como ID del documento
-      await _firestore.collection('users').doc(cedula).set({
-        'uid': uid,
+      // Guardar información adicional en Firestore usando el UID como ID del documento
+      await _firestore.collection('users').doc(uid).set({
         'email': email,
         'firstName': firstName,
         'lastName': lastName,
+        'cedula': cedula, // Guardar la cédula como un campo en el documento
+        'rol': 'usuario', // Asignar rol predeterminado
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +95,7 @@ class RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         toolbarHeight: 30, // Reduce la altura del AppBar
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -81,10 +103,10 @@ class RegisterPageState extends State<RegisterPage> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-        ),),
+        ),
+      ),
       body: Column(
         children: [
-        
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Center(
@@ -175,8 +197,6 @@ class RegisterPageState extends State<RegisterPage> {
                         minimumSize: Size(double.infinity, 30), // Botón de ancho completo
                       ),
                     ),
-                    
-                    
                   ],
                 ),
               ),
