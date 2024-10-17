@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:software_ingenieriaeconomica/packages/Gradiente_Geometrico/OpCalculuoGG.dart';
+import 'package:software_ingenieriaeconomica/packages/UVR/pagecalculouvr.dart';
+import 'package:software_ingenieriaeconomica/packages/armotization/armotizacionpage.dart';
 import 'package:software_ingenieriaeconomica/packages/gradiente_Aritmetico/OPCalculoGA.dart';
 import 'package:software_ingenieriaeconomica/packages/interesCompuesto/opcalculoIC.dart';
-import 'package:software_ingenieriaeconomica/packages/interesSimple/opcionescalculoIS.dart'; // Asegúrate de que esta ruta sea correcta
+import 'package:software_ingenieriaeconomica/packages/interesSimple/opcionescalculoIS.dart';
 
 class CalculationPage extends StatelessWidget {
   const CalculationPage({super.key});
@@ -13,7 +15,7 @@ class CalculationPage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Cálculos"),
       ),
-      body: Padding(
+      body: SingleChildScrollView( // Envuelve el contenido en un SingleChildScrollView
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -34,6 +36,10 @@ class CalculationPage extends StatelessWidget {
             _calculationCard(context, "Gradiente Aritmético", GradienteAritmeticoPage()),
             SizedBox(height: 20),
             _calculationCard(context, "Gradiente Geométrico", GradienteGeometricoPage()),
+            SizedBox(height: 20),
+            _calculationCard(context, "Armotización",  AmortizacionCalculationPage()), 
+            SizedBox(height: 20),
+            _calculationCard(context, "Unidad de Valor Real", UvrCalculationPage()), 
           ],
         ),
       ),
@@ -70,3 +76,5 @@ class CalculationPage extends StatelessWidget {
     );
   }
 }
+
+

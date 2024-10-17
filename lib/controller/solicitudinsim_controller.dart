@@ -1,215 +1,116 @@
-// lib/controller/solicitudinsim_controller.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:software_ingenieriaeconomica/controller/interest_calculator.dart';
+import 'package:intl/intl.dart'; // Importar para manejar fechas
+import 'package:firebase_auth/firebase_auth.dart'; // Asegúrate de tener esto importado
 
-enum InterestType {
-  annual, // Interés anual
-  monthly, // Interés mensual
-  daily, // Interés diario
+class SimpleInterestController {
+  // Propiedades del controlador
+  double _interest = 0.0;
+  double _totalPayment = 0.0;
+  int _numInstallments = 0;
+  double _amountPerInstallment = 0.0; // Nueva propiedad
+  DateTime? _dueDate; // Nueva propiedad para la fecha límite
+
+  void calculateInterest({
+    required double principal,
+    required double rate,
+    required int years,
+    required int months,
+    required int days,
+  }) {
+    // Convertir el tiempo total a años
+    double totalTime = years + (months / 12) + (days / 365);
+    
+    // Calcular el interés simple
+    _interest = principal * (rate / 100) * totalTime;
+    _totalPayment = principal + _interest;
+
+    // Calcular el número de cuotas y el monto por cuota
+    _numInstallments = _calculateInstallments(totalTime);
+    _amountPerInstallment = _calculateAmountPerInstallment(_totalPayment, _numInstallments);
+
+    // Calcular la fecha límite de pago
+    _dueDate = _calculateDueDate(years, months, days);
+  }
+
+  // Método privado para calcular las cuotas
+  int _calculateInstallments(double totalTime) {
+    // Suponiendo que quieres una cuota por cada mes del tiempo total
+    return (12 * totalTime).toInt(); // 12 cuotas al año
+  }
+
+  // Método privado para calcular el monto por cuota
+  double _calculateAmountPerInstallment(double totalPayment, int numInstallments) {
+    if (numInstallments == 0) return 0.0; // Para evitar división por cero
+    return totalPayment / numInstallments;
+  }
+
+  // Método privado para calcular la fecha límite de pago
+  DateTime _calculateDueDate(int years, int months, int days) {
+    // Obtener la fecha actual
+    DateTime now = DateTime.now();
+    // Calcular la fecha límite sumando el tiempo al actual
+    return DateTime(now.year + years, now.month + months, now.day + days);
+  }
+
+ // Método para solicitar préstamo
+Future<void> submitLoanRequest({
+  required String cedula,
+  required double monto,
+  required double tasa,
+  required String tipoTasa,
+  required int years,
+  required int months,
+  required int days,
+}) async {
+  // Obtener la cédula del usuario autenticado
+  User? user = FirebaseAuth.instance.currentUser; // Obtener el usuario autenticado
+  String? userCedula;
+
+  if (user != null) {
+    // Buscar la cédula en Firestore
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users') // Asegúrate de que este sea el nombre de tu colección de usuarios
+        .doc(user.uid) // Utiliza el ID del usuario para obtener su documento
+        .get();
+
+    if (userDoc.exists) {
+      userCedula = userDoc.get('cedula'); // Asegúrate de que este sea el nombre correcto del campo
+    }
+  }
+
+  // Verificar si la cédula proporcionada coincide con la cédula del usuario autenticado
+  if (cedula != userCedula) {
+    throw Exception('La cédula no coincide con la del usuario autenticado.');
+  }
+
+  // Crear un documento en Firestore para guardar la solicitud
+  await FirebaseFirestore.instance.collection('solicitudes_prestamo').add({
+    'cedula': cedula,
+    'monto': monto,
+    'tasa': tasa,
+    'tipo_tasa': tipoTasa,
+    'estado': 'pendiente', // Guardar como pendiente
+    'fecha_solicitud': Timestamp.now(), // Fecha actual
+    'fecha_limite': _dueDate != null ? Timestamp.fromDate(_dueDate!) : null, // Guardar fecha límite
+    'interes': _interest, // Guardar interés calculado
+    'total_pago': _totalPayment, // Guardar total a pagar
+    'monto_por_cuota': _amountPerInstallment, // Guardar monto por cuota
+    'num_cuotas': _numInstallments, // Guardar número de cuotas
+    'tipo_prestamo': 'interes_simple', // Identificador para préstamos de interés simple
+  });
 }
 
-class SimpleInterestController extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final TextEditingController principalController = TextEditingController();
-  final TextEditingController rateController = TextEditingController();
-  final TextEditingController timeYearsController = TextEditingController();
-  final TextEditingController timeMonthsController = TextEditingController();
-  final TextEditingController timeDaysController = TextEditingController();
 
-  String? nombre;
-  String? apellido;
-  String? correo;
-  String? cedula;
+  // Métodos para obtener los resultados
+  double get interest => _interest;
+  double get totalPayment => _totalPayment;
+  int get numInstallments => _numInstallments;
+  double get amountPerInstallment => _amountPerInstallment; // Nuevo getter
+  DateTime? get dueDate => _dueDate; // Nuevo getter para la fecha límite
 
-  InterestType? selectedInterestType;
-
-  double interest = 0.0;
-  double totalPayment = 0.0;
-
-  Future<void> fetchUserData() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        QuerySnapshot userSnapshot = await _firestore
-            .collection('users')
-            .where('email', isEqualTo: user.email)
-            .get();
-
-        if (userSnapshot.docs.isNotEmpty) {
-          var userData = userSnapshot.docs.first;
-
-          nombre = userData['firstName'] ?? '';
-          apellido = userData['lastName'] ?? '';
-          correo = user.email ?? '';
-          cedula = userData['cedula'];
-          notifyListeners();
-        } else {
-          // Manejar el caso donde no se encuentra el usuario
-          nombre = apellido = correo = cedula = null;
-          notifyListeners();
-        }
-      } catch (e) {
-        // Manejar el error
-        nombre = apellido = correo = cedula = null;
-        notifyListeners();
-      }
-    }
-  }
-
-  double calculateSimpleInterest() {
-    double principal = double.tryParse(principalController.text) ?? 0;
-    double rate = double.tryParse(rateController.text) ?? 0;
-
-    int years = int.tryParse(timeYearsController.text) ?? 0;
-    int months = int.tryParse(timeMonthsController.text) ?? 0;
-    int days = int.tryParse(timeDaysController.text) ?? 0;
-
-    InterestCalculator calculator = InterestCalculator();
-    interest = calculator.calculateSimpleInterest(
-      principal: principal,
-      rate: rate,
-      rateType: selectedInterestType ?? InterestType.annual, // Usar un valor por defecto si no está seleccionado
-      timeInYears: years,
-      timeInMonths: months,
-      timeInDays: days,
-    );
-
-    totalPayment = principal + interest; // Calcular el total a pagar
-    notifyListeners();
-    return interest;
-  }
-
-  double getTotalPayment() {
-    return totalPayment; // Retornar el total a pagar
-  }
-
-  Future<int> _getLoanCount(String userId) async {
-    QuerySnapshot loanSnapshot = await _firestore
-        .collection('loans')
-        .where('usuarioId', isEqualTo: userId)
-        .where('estado', isEqualTo: 'pendiente')
-        .get();
-    return loanSnapshot.docs.length; // Retornar la cantidad de préstamos pendientes
-  }
-
-  // Función para calcular la fecha límite
-  DateTime calculateDeadlineDate(DateTime startDate, int years, int months, int days) {
-    int newYear = startDate.year + years;
-    int newMonth = startDate.month + months;
-
-    while (newMonth > 12) {
-      newMonth -= 12;
-      newYear += 1;
-    }
-
-    int newDay = startDate.day + days;
-    // Obtener el número de días en el nuevo mes
-    int daysInNewMonth = DateTime(newYear, newMonth + 1, 0).day;
-    if (newDay > daysInNewMonth) {
-      newDay = daysInNewMonth;
-    }
-
-    return DateTime(newYear, newMonth, newDay);
-  }
-
-  Future<void> solicitarPrestamo(BuildContext context) async {
-    try {
-      User? user = _auth.currentUser;
-      if (user != null) {
-        // Verificar que todos los campos estén completos
-        if (principalController.text.isEmpty || rateController.text.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Por favor, complete todos los campos de monto y tasa de interés.')),
-          );
-          return; // Salir de la función si hay campos vacíos
-        }
-
-        // Verificar cuántos préstamos tiene el usuario
-        int loanCount = await _getLoanCount(user.uid);
-        if (loanCount >= 3) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No puede solicitar más de 3 préstamos pendientes.')),
-          );
-          return; // Salir si ya tiene 3 préstamos
-        }
-
-        // Verificar que al menos uno de los campos de tiempo esté lleno
-        bool isAnyTimeFieldFilled = timeYearsController.text.isNotEmpty ||
-                                    timeMonthsController.text.isNotEmpty ||
-                                    timeDaysController.text.isNotEmpty;
-
-        if (!isAnyTimeFieldFilled) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Por favor, debe llenar al menos un campo de tiempo (años, meses, días).')),
-          );
-          return; // Salir si no hay campos de tiempo llenos
-        }
-
-        // Datos del préstamo
-        double principal = double.tryParse(principalController.text) ?? 0;
-        double rate = double.tryParse(rateController.text) ?? 0;
-        double interest = calculateSimpleInterest();
-        double totalPayment = getTotalPayment();
-        int years = int.tryParse(timeYearsController.text) ?? 0;
-        int months = int.tryParse(timeMonthsController.text) ?? 0;
-        int days = int.tryParse(timeDaysController.text) ?? 0;
-
-        // Fecha de solicitud
-        DateTime solicitudDate = DateTime.now();
-
-        // Calcular fecha límite
-        DateTime deadlineDate = calculateDeadlineDate(solicitudDate, years, months, days);
-
-        // Crear el objeto de solicitud de préstamo
-        Map<String, dynamic> loanData = {
-          'usuarioId': user.uid,
-          'montoPrestamo': principal,
-          'interes': double.parse(interest.toStringAsFixed(2)), // Guardar con 2 decimales
-          'tasaInteres': double.parse(rate.toStringAsFixed(2)), // Guardar la tasa de interés con 2 decimales
-          'totalAPagar': double.parse(totalPayment.toStringAsFixed(2)), // Guardar con 2 decimales
-          'estado': 'pendiente', // Estado inicial
-          'tipoPrestamo': 'interes_simple', // Nuevo campo para identificar el tipo de préstamo
-          'fechaSolicitud': Timestamp.fromDate(solicitudDate),
-          'fechaLimite': Timestamp.fromDate(deadlineDate),
-          'tiempo': {
-            // Solo guardar el campo que tenga valor
-            if (years > 0) 'años': years,
-            if (months > 0) 'meses': months,
-            if (days > 0) 'días': days,
-          },
-        };
-
-        // Guardar en Firestore
-        await _firestore.collection('loans').add(loanData);
-
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Solicitud de préstamo enviada con éxito')),
-        );
-
-        // Opcional: Limpiar los campos después de la solicitud
-        principalController.clear();
-        rateController.clear();
-        timeYearsController.clear();
-        timeMonthsController.clear();
-        timeDaysController.clear();
-        selectedInterestType = null;
-        notifyListeners();
-      } else {
-        // Manejar el caso donde el usuario no está autenticado
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Debe iniciar sesión para solicitar un préstamo')),
-        );
-      }
-    } catch (e) {
-      // Manejar errores
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al solicitar el préstamo: $e')),
-      );
-    }
+  // Método para formatear números a estilo monetario
+  String formatCurrency(double amount) {
+    NumberFormat formatter = NumberFormat("#,##0.00", "es_ES"); // Establecer el formato en español
+    return formatter.format(amount);
   }
 }

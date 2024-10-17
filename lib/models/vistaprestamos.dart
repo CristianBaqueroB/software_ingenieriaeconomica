@@ -1,4 +1,3 @@
-// lib/screens/gestion_prestamos_page.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:software_ingenieriaeconomica/admin/controladmin/controllvistaprestamo.dart';
@@ -21,12 +20,12 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
   }
 
   void _loadLoans() {
-    _loanListFuture = _loanController.fetchLoans(_filtroEstado);
+    _loanListFuture = _loanController.fetchLoanRequests(_filtroEstado);
   }
 
   void _updateLoanStatus(String loanId, String newStatus) async {
     try {
-      await _loanController.updateLoanStatus(loanId, newStatus);
+      await _loanController.updateLoanRequestStatus(loanId, newStatus);
       _loadLoans(); // Recargar préstamos
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Estado actualizado a: $newStatus')),
@@ -38,72 +37,65 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
     }
   }
 
-  Future<void> _editLoanDetails(BuildContext context, Loan loan) async {
-    final _interesController = TextEditingController(text: loan.interes.toString());
-    final _totalAPagarController = TextEditingController(text: loan.totalAPagar.toString());
-    final _cantidadPagadaController = TextEditingController(text: loan.cantidadPagada.toString());
-
-    await showDialog(
+  Future<void> _confirmAcceptLoan(String loanId) async {
+    bool confirm = await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Editar Detalles del Préstamo'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Campos de edición
-                _buildTextField(_interesController, 'Interés'),
-                SizedBox(height: 10),
-                _buildTextField(_totalAPagarController, 'Total a Pagar'),
-                SizedBox(height: 10),
-                _buildTextField(_cantidadPagadaController, 'Cantidad Pagada por el Usuario'),
-              ],
-            ),
-          ),
+          title: Text('Confirmar aceptación'),
+          content: Text('¿Estás seguro de que deseas aceptar este préstamo?'),
           actions: [
             TextButton(
-              child: Text('Cancelar'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
+              child: Text('Cancelar'),
             ),
             ElevatedButton(
-              child: Text('Guardar'),
-              onPressed: () async {
-                // Guardar los cambios
-                double parsedInteres = double.parse(_interesController.text);
-                double parsedTotalAPagar = double.parse(_totalAPagarController.text);
-                double parsedCantidadPagada = double.parse(_cantidadPagadaController.text);
-
-                try {
-                  await _loanController.editLoanDetails(loan.id, parsedInteres, parsedTotalAPagar, parsedCantidadPagada);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Detalles del préstamo actualizados con éxito.')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al actualizar los detalles.')),
-                  );
-                }
+              onPressed: () {
+                Navigator.of(context).pop(true);
               },
+              child: Text('Aceptar'),
             ),
           ],
         );
       },
     );
+
+    if (confirm) {
+      _updateLoanStatus(loanId, 'aceptado');
+    }
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(),
-      ),
-      keyboardType: TextInputType.numberWithOptions(decimal: true),
+  Future<void> _confirmRejectLoan(String loanId) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirmar rechazo'),
+          content: Text('¿Estás seguro de que deseas rechazar este préstamo?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: Text('Rechazar'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
+        );
+      },
     );
+
+    if (confirm) {
+      _updateLoanStatus(loanId, 'rechazado');
+    }
   }
 
   @override
@@ -164,25 +156,26 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: ListTile(
-                        title: Text('Préstamo: ${loan.montoPrestamo}'),
+                        title: Text('Préstamo: \$${loan.monto.toStringAsFixed(2)}'),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Estado: ${loan.estado}'),
                             Text('Fecha de Solicitud: ${DateFormat('dd/MM/yyyy').format(loan.fechaSolicitud)}'),
                             Text('Fecha Límite: ${DateFormat('dd/MM/yyyy').format(loan.fechaLimite)}'),
+                            Text('Tipo Prestamo: ${loan.tipoprestamo}'),
                           ],
                         ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.edit),
-                              onPressed: () => _editLoanDetails(context, loan),
+                              icon: Icon(Icons.check_circle, color: Colors.green),
+                              onPressed: () => _confirmAcceptLoan(loan.id),
                             ),
                             IconButton(
-                              icon: Icon(Icons.check),
-                              onPressed: () => _updateLoanStatus(loan.id, 'aceptado'),
+                              icon: Icon(Icons.cancel, color: Colors.red),
+                              onPressed: () => _confirmRejectLoan(loan.id),
                             ),
                           ],
                         ),

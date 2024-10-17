@@ -64,6 +64,9 @@ flutter:
     - assets/img/ValorFruturoGGP.png
     - assets/img/ValorPresenteGI.png
     - assets/img/ValorFuturoGI.png
+    - assets/img/UNVR.png
+    - assets/img/VerificacionUVR.png
+    - assets/img/VariaciónualUVR.png
 
 
   fonts:

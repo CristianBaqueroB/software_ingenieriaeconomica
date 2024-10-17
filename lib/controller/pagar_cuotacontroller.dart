@@ -1,4 +1,6 @@
-class Prestamo {
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Pagcuota {
   final String id;
   final String cedula;
   final String estado;
@@ -16,7 +18,7 @@ class Prestamo {
   // Nueva propiedad que indica si el pago está atrasado
   bool get atrasado => DateTime.now().isAfter(fechaLimite);
 
-  Prestamo({
+  Pagcuota({
     required this.id,
     required this.cedula,
     required this.estado,
@@ -32,8 +34,8 @@ class Prestamo {
     required this.tipoprestamo,
   });
 
-  factory Prestamo.fromDocument(Map<String, dynamic> data, String id) {
-    return Prestamo(
+  factory Pagcuota.fromDocument(Map<String, dynamic> data, String id) {
+    return Pagcuota(
       id: id,
       estado: data['estado'] ?? 'Sin estado',
       fechaSolicitud: (data['fecha_solicitud']?.toDate() ?? DateTime.now()),
@@ -48,6 +50,41 @@ class Prestamo {
       tipoTasa: data['tipo_tasa'] ?? 'Desconocido',
       tipoprestamo: data['tipo_prestamo'] ?? 'Desconocido',
     );
+  }
+
+  // Método para convertir Pagcuota a un Map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'cedula': cedula,
+      'estado': estado,
+      'fecha_limite': fechaLimite,
+      'fecha_solicitud': fechaSolicitud,
+      'interes': interes,
+      'monto': monto,
+      'monto_por_cuota': montoPorCuota,
+      'num_cuotas': numCuotas,
+      'tasa': tasa,
+      'tipo_tasa': tipoTasa,
+      'total_pago': totalPago,
+      'tipo_prestamo': tipoprestamo,
+    };
+  }
+
+  static Future<List<Pagcuota>> cargarDocumentos() async {
+    List<Pagcuota> prestamos = [];
+
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('solicitudes_prestamo').get();
+      for (var doc in snapshot.docs) {
+        prestamos.add(Pagcuota.fromDocument(doc.data() as Map<String, dynamic>, doc.id));
+      }
+    } catch (e) {
+      // Manejar errores si la carga falla
+      print('Error al cargar documentos: $e');
+    }
+
+    return prestamos;
   }
 
   static double _toDouble(dynamic value) {

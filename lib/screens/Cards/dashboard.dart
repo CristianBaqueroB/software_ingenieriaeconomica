@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:software_ingenieriaeconomica/packages/Gradiente_Geometrico/GradienteG.dart';
+import 'package:software_ingenieriaeconomica/packages/UVR/pgprinuvr.dart'; // Asegúrate de importar UvrInfoPage
 import 'package:software_ingenieriaeconomica/packages/gradiente_Aritmetico/gradiente_aritmetico.dart';
 import 'package:software_ingenieriaeconomica/packages/interesSimple/interest_simple.dart';
-import 'package:software_ingenieriaeconomica/packages/interesCompuesto/interes_compuesto.dart'; // Asegúrate de usar la ruta correcta
+import 'package:software_ingenieriaeconomica/packages/interesCompuesto/interes_compuesto.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -13,41 +14,52 @@ class DashboardPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
       ),
-      body: CustomScrollView(
-        slivers: <Widget>[
-          SliverList(
-            delegate: SliverChildListDelegate(
-              <Widget>[
-                _CardItem(
-                  child: SizedBox(
-                    width: double.infinity, // Ocupa todo el ancho disponible
-                    child: const SimpleInterestPage(),
-                  ),
-                ),
-                _CardItem(
-                  child: SizedBox(
-                    width: double.infinity, // Ocupa todo el ancho disponible
-                    child: const CompoundInterestPage(),
-                  ),
-                ),
-                _CardItem(
-                  child: SizedBox(
-                    width: double.infinity, // Ocupa todo el ancho disponible
-                    child: const ArithmeticGradientPage(),
-                  ),
-
-                ),
-                _CardItem(
-                  child: SizedBox(
-                    width: double.infinity, // Ocupa todo el ancho disponible
-                    child:  const GeometricGradientPage(),
-                  ),
-
-                ),
-    
-              ],
+      body: ListView(
+        children: <Widget>[
+          // Botones originales
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const SimpleInterestPage(),
             ),
           ),
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const CompoundInterestPage(),
+            ),
+          ),
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const ArithmeticGradientPage(),
+            ),
+          ),
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const GeometricGradientPage(),
+            ),
+          ),
+         _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const GeometricGradientPage(),
+            ),
+          ),
+           _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const GeometricGradientPage(),
+            ),
+          ),
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const UvrInfoPage(),
+            ),
+          ),
+          
         ],
       ),
     );
@@ -62,12 +74,14 @@ class _CardItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 8.0,
-      margin: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 12.0),
+      elevation: 10.0,
+      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(5.0),
         child: child,
       ),
     );
   }
 }
+
+
