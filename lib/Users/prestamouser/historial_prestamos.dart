@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:software_ingenieriaeconomica/controller/historial_controller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/historial_controller.dart';
 
 
 class HistorialSolicitudesPrestamos extends StatelessWidget {

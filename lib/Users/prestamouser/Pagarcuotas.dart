@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:software_ingenieriaeconomica/controller/pagar_cuotacontroller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/pagar_cuotacontroller.dart';
 
 class PagarCuotaPrestamo extends StatefulWidget {
   final Pagcuota prestamo;

@@ -2,10 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Asegúrate de importar Firestore
-import 'package:software_ingenieriaeconomica/controller/pagar_cuotacontroller.dart';
-import 'package:software_ingenieriaeconomica/models/Pagarcuotas.dart';
-import 'package:software_ingenieriaeconomica/models/PrestamoInteresSim.dart';
-import 'package:software_ingenieriaeconomica/models/historial_prestamos.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/pagar_cuotacontroller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/Pagarcuotas.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/PrestamoInteresSim.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/historial_prestamos.dart';
 
 class SolicitudPrestamo extends StatefulWidget {
   @override

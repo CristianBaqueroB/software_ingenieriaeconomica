@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:software_ingenieriaeconomica/models/SolicitudPrestamo.dart';
-import 'package:software_ingenieriaeconomica/screens/Cards/CalculationPage.dart';
-import 'package:software_ingenieriaeconomica/screens/Cards/dashboard.dart';
+import 'package:software_ingenieriaeconomica/Users/SolicitudPrestamo.dart';
+import 'package:software_ingenieriaeconomica/Users/CalculationPage.dart';
+import 'package:software_ingenieriaeconomica/Users/dashboard.dart';
 
 import 'package:software_ingenieriaeconomica/services/SettingsPage.dart'; // Importa SettingsPage
 

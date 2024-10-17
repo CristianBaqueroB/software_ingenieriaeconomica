@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Importa esta librería para usar TextInputFormatter
-import 'package:software_ingenieriaeconomica/controller/login_controller.dart';
-import 'package:software_ingenieriaeconomica/screens/home_page.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/login_controller.dart';
+import 'package:software_ingenieriaeconomica/Users/home_page.dart';
 import 'package:software_ingenieriaeconomica/screens/reset_password_page.dart';
 import 'package:software_ingenieriaeconomica/screens/register_page.dart';
 import 'package:software_ingenieriaeconomica/admin/homepageadmin.dart';

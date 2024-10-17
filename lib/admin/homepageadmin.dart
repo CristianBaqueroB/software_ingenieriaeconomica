@@ -1,9 +1,10 @@
 // lib/admin/admin_homepage.dart
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:software_ingenieriaeconomica/admin/Dashoaradmin.dart';
 import 'package:software_ingenieriaeconomica/admin/SettingsPageadmin.dart';
-import 'package:software_ingenieriaeconomica/models/vistaprestamos.dart';
-import 'package:software_ingenieriaeconomica/screens/Cards/dashboard.dart'; // Importa la nueva página de gestión de préstamos
+import 'package:software_ingenieriaeconomica/admin/vistaprestamos.dart';
+
 
 
 class AdminHomePage extends StatefulWidget {
@@ -55,7 +56,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return DashboardPage();  // Página de dashboard
+        return DashboardPageAdmin ();  // Página de dashboard
       case 1:
         return GestionPrestamosPage();  // Página de gestión de préstamos
       case 2:

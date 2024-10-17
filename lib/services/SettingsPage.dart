@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'; 
-import 'package:software_ingenieriaeconomica/controller/settingpage_contoller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/settingpage_contoller.dart';
 import 'package:software_ingenieriaeconomica/services/EditProfilePage.dart';
 
 class SettingsPage extends StatefulWidget {
