@@ -14,8 +14,9 @@ class PagarCuotaPrestamo extends StatefulWidget {
 
 class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
   List<Pagcuota> _prestamos = [];
-  Pagcuota? _prestamoSeleccionado; // Préstamo seleccionado
-  List<bool> _selectedCuotas = []; // Lista para mantener el estado de selección de cuotas
+  Pagcuota? _prestamoSeleccionado;
+  double _cuotasSeleccionadas = 1;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -27,9 +28,7 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
     List<Pagcuota> prestamosAceptados = await obtenerPrestamosAceptados();
     setState(() {
       _prestamos = prestamosAceptados;
-      // Resetea la lista de cuotas al cargar los préstamos
-      _prestamoSeleccionado = null;
-      _selectedCuotas = [];
+      _isLoading = false;
     });
   }
 
@@ -39,69 +38,97 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
       appBar: AppBar(
         title: Text('Pagar Cuota del Préstamo'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Card(
-          elevation: 4,
-          margin: const EdgeInsets.symmetric(vertical: 10.0), // Ajusta el margen
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                // Selector de Préstamo
-                DropdownButton<Pagcuota>(
-                  hint: Text('Selecciona un Préstamo'),
-                  value: _prestamoSeleccionado,
-                  onChanged: (Pagcuota? nuevoPrestamo) {
-                    setState(() {
-                      _prestamoSeleccionado = nuevoPrestamo;
-                      _selectedCuotas = List<bool>.generate(
-                          nuevoPrestamo != null ? nuevoPrestamo.numCuotas : 0,
-                          (index) => false);
-                    });
-                  },
-                  items: _prestamos.map((prestamo) {
-                    return DropdownMenuItem<Pagcuota>(
-                      value: prestamo,
-                      child: Text(
-                        'Cédula: ${prestamo.cedula}, Total a Pagar: \$${formatNumber(prestamo.totalPago)}',
-                        style: TextStyle(fontSize: 11), // Ajusta el tamaño del texto
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                // Mostrar cuotas si se selecciona un préstamo
-                if (_prestamoSeleccionado != null) ...[
-                  SizedBox(height: 16), // Espacio entre el Dropdown y las cuotas
-                  ListView.builder(
-                    shrinkWrap: true, // Importante para evitar overflow
-                    physics: NeverScrollableScrollPhysics(), // Deshabilitar el scroll de ListView
-                    itemCount: _prestamoSeleccionado!.numCuotas,
-                    itemBuilder: (context, index) {
-                      return CheckboxListTile(
-                        title: Text(
-                          'Cuota ${index + 1} - Monto: \$${formatNumber(_prestamoSeleccionado!.montoPorCuota)}',
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20.0),
+              child: Card(
+                elevation: 4,
+                margin: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      // Dropdown para seleccionar el préstamo
+                      DropdownButtonFormField<Pagcuota>(
+                        decoration: InputDecoration(
+                          labelText: 'Selecciona un Préstamo',
+                          border: OutlineInputBorder(),
                         ),
-                        value: _selectedCuotas[index],
-                        onChanged: (bool? value) {
+                        value: _prestamoSeleccionado,
+                        onChanged: (Pagcuota? nuevoPrestamo) {
                           setState(() {
-                            _selectedCuotas[index] = value!;
+                            _prestamoSeleccionado = nuevoPrestamo;
+                            _cuotasSeleccionadas = 1; // Reiniciar el slider al cambiar de préstamo
                           });
                         },
-                      );
-                    },
+                        items: _prestamos.map((prestamo) {
+                          return DropdownMenuItem<Pagcuota>(
+                            value: prestamo,
+                            child: Text(
+                              'Cédula: ${prestamo.cedula} ',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      if (_prestamoSeleccionado != null) ...[
+                        SizedBox(height: 20),
+
+                        // Texto que muestra el monto total a pagar
+                        Text(
+                          '- Total a Pagar: \$${formatNumber(_prestamoSeleccionado!.totalPago)}',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 20),
+
+                        // Texto que indica la selección de cuotas
+                        Text(
+                          'Selecciona cuántas cuotas deseas pagar:',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 10),
+
+                        // Slider para seleccionar la cantidad de cuotas a pagar
+                        Slider(
+                          value: _cuotasSeleccionadas,
+                          min: 1,
+                          max: _prestamoSeleccionado!.numCuotas.toDouble(),
+                          divisions: _prestamoSeleccionado!.numCuotas,
+                          label: '${_cuotasSeleccionadas.toInt()}',
+                          onChanged: (double value) {
+                            setState(() {
+                              _cuotasSeleccionadas = value;
+                            });
+                          },
+                        ),
+                        SizedBox(height: 10),
+
+                        // Texto que muestra el monto total a pagar según las cuotas seleccionadas
+                        Text(
+                          'Monto total a pagar por ${_cuotasSeleccionadas.toInt()} cuota(s): '
+                          '\$${formatNumber(_cuotasSeleccionadas * _prestamoSeleccionado!.montoPorCuota)}',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 20),
+
+                        // Botón para confirmar el pago
+                        ElevatedButton.icon(
+                          onPressed: _confirmarPagoCuotas,
+                          icon: Icon(Icons.payment),
+                          label: Text('Confirmar Pago'),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                            textStyle: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: _confirmarPagoCuotas,
-                    child: Text('Confirmar Pago'),
-                  ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -109,63 +136,67 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
     if (_prestamoSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Por favor, selecciona un préstamo.'),
-        duration: Duration(seconds: 3),
         backgroundColor: Colors.red,
       ));
       return;
     }
 
-    List<int> cuotasSeleccionadas = [];
-    for (int i = 0; i < _selectedCuotas.length; i++) {
-      if (_selectedCuotas[i]) {
-        cuotasSeleccionadas.add(i + 1);
-      }
-    }
+    int cuotasSeleccionadas = _cuotasSeleccionadas.toInt();
+    double totalPagar = cuotasSeleccionadas * _prestamoSeleccionado!.montoPorCuota;
 
-    if (cuotasSeleccionadas.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Seleccione al menos una cuota para pagar.'),
-        duration: Duration(seconds: 3),
-        backgroundColor: Colors.red,
-      ));
-      return;
-    }
+    // Diálogo de confirmación antes de procesar el pago
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmar Pago'),
+          content: Text(
+              '¿Estás seguro de realizar el pago de $cuotasSeleccionadas cuota(s) por un total de \$${formatNumber(totalPagar)}?'),
+          actions: [
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              child: Text('Confirmar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _procesarPago(cuotasSeleccionadas, totalPagar);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-    double nuevoTotalPago = _prestamoSeleccionado!.totalPago;
-    int nuevasCuotas = _prestamoSeleccionado!.numCuotas;
-
-    // ignore: unused_local_variable
-    for (var index in cuotasSeleccionadas) {
-      nuevoTotalPago -= _prestamoSeleccionado!.montoPorCuota;
-      nuevasCuotas--;
-    }
-
+  void _procesarPago(int cuotasSeleccionadas, double totalPagar) {
+    double nuevoTotalPago = _prestamoSeleccionado!.totalPago - totalPagar;
+    int nuevasCuotas = _prestamoSeleccionado!.numCuotas - cuotasSeleccionadas;
     String nuevoEstado = (nuevoTotalPago <= 0) ? 'Pagado' : _prestamoSeleccionado!.estado;
 
-    // Actualizar en Firestore
     try {
       FirebaseFirestore.instance
           .collection('solicitudes_prestamo')
           .doc(_prestamoSeleccionado!.id)
           .update({
-            'total_pago': nuevoTotalPago,
-            'num_cuotas': nuevasCuotas,
-            'estado': nuevoEstado,
-          }).then((_) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Pago de cuotas realizado con éxito. Nueva deuda: \$${formatNumber(nuevoTotalPago)}'),
-              duration: Duration(seconds: 3),
-            ));
+        'total_pago': nuevoTotalPago,
+        'num_cuotas': nuevasCuotas,
+        'estado': nuevoEstado,
+      }).then((_) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Pago de $cuotasSeleccionadas cuota(s) realizado con éxito. Nueva deuda: \$${formatNumber(nuevoTotalPago)}'),
+        ));
 
-            _cargarPrestamosAceptados(); // Refrescar la lista de préstamos después del pago
-            setState(() {
-              _prestamoSeleccionado = null; // Limpiar la selección después del pago
-            });
-          });
+        _cargarPrestamosAceptados();
+        setState(() {
+          _prestamoSeleccionado = null;
+        });
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error al realizar el pago. Intente de nuevo.'),
-        duration: Duration(seconds: 3),
         backgroundColor: Colors.red,
       ));
     }

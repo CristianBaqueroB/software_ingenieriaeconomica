@@ -12,42 +12,7 @@ class DashboardPageAdmin extends StatelessWidget {
       ),
       body: ListView(
         children: <Widget>[
-          _CardItem(
-            title: 'Resumen de Préstamos',
-            onTap: () {
-              // Acciones para la sección de resumen
-            },
-          ),
-          _CardItem(
-            title: 'Agregar Nuevo Préstamo',
-            onTap: () {
-              // Acciones para agregar un nuevo préstamo
-            },
-          ),
-          _CardItem(
-            title: 'Lista de Préstamos Activos',
-            onTap: () {
-              // Acciones para listar préstamos activos
-            },
-          ),
-          _CardItem(
-            title: 'Análisis de Préstamos',
-            onTap: () {
-              // Acciones para análisis de préstamos
-            },
-          ),
-          _CardItem(
-            title: 'Configuración de Tasas de Interés',
-            onTap: () {
-              // Acciones para configurar tasas
-            },
-          ),
-          _CardItem(
-            title: 'Historial de Pagos',
-            onTap: () {
-              // Acciones para mostrar historial de pagos
-            },
-          ),
+          
           _CardItem(
             title: 'Gestión de Clientes',
             onTap: () {

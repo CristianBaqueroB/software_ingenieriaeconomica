@@ -21,19 +21,19 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
     // Aquí puedes cargar los datos de los préstamos desde Firestore
     cargarPrestamos();
   }
-Future<void> cargarPrestamos() async {
-  try {
-    final snapshot = await FirebaseFirestore.instance.collection('solicitudes_prestamo').get();
-    setState(() {
-      // Convertir los documentos a objetos Pagcuota
-      prestamos = snapshot.docs.map((doc) => Pagcuota.fromDocument(doc.data() as Map<String, dynamic>, doc.id)).toList();
-    });
-  } catch (e) {
-    // Manejar el error, por ejemplo, mostrando un mensaje en la consola
-    print('Error al cargar préstamos: $e');
-  }
-}
 
+  Future<void> cargarPrestamos() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('solicitudes_prestamo').get();
+      setState(() {
+        // Convertir los documentos a objetos Pagcuota
+        prestamos = snapshot.docs.map((doc) => Pagcuota.fromDocument(doc.data() as Map<String, dynamic>, doc.id)).toList();
+      });
+    } catch (e) {
+      // Manejar el error, por ejemplo, mostrando un mensaje en la consola
+      print('Error al cargar préstamos: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +49,9 @@ Future<void> cargarPrestamos() async {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  icon: Icon(Icons.history, color: Color.fromARGB(255, 133, 238, 159), size: 40),
+                _IconButton(
+                  icon: Icons.history,
+                  label: 'Historial',
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -58,24 +59,27 @@ Future<void> cargarPrestamos() async {
                     );
                   },
                 ),
-                IconButton(
-                  icon: Icon(Icons.assignment_turned_in, color: Color.fromARGB(255, 133, 238, 159), size: 40),
+                _IconButton(
+                  icon: Icons.assignment_turned_in,
+                  label: 'Pagar Cuota',
                   onPressed: () {
-                    // Asegúrate de tener un índice válido para acceder a la lista de préstamos
                     if (prestamos.isNotEmpty) {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => PagarCuotaPrestamo(prestamo: prestamos[0])), // Cambia el índice según sea necesario
+                        MaterialPageRoute(builder: (context) => PagarCuotaPrestamo(prestamo: prestamos[0])),
                       );
                     }
                   },
                 ),
               ],
             ),
+
             SizedBox(height: 20), // Espacio entre iconos y botones
 
             // Botones para tipos de préstamo uno debajo del otro
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.money,
+              label: 'Interés Simple',
               onPressed: () {
                 // Navegar a la pantalla de interés simple
                 Navigator.push(
@@ -83,56 +87,61 @@ Future<void> cargarPrestamos() async {
                   MaterialPageRoute(builder: (context) => SimpleInterestPage()),
                 );
               },
-              child: Text('Interés Simple'),
             ),
             SizedBox(height: 10), // Espacio entre botones
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.monetization_on,
+              label: 'Interés Compuesto',
               onPressed: () {
                 // Navegar a la pantalla de interés compuesto
               },
-              child: Text('Interés Compuesto'),
             ),
             SizedBox(height: 10), // Espacio entre botones
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.trending_up,
+              label: 'Gradiente Aritmético',
               onPressed: () {
                 // Navegar a la pantalla de gradiente aritmético
               },
-              child: Text('Gradiente Aritmético'),
             ),
             SizedBox(height: 10), // Espacio entre botones
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.trending_flat,
+              label: 'Gradiente Geométrico',
               onPressed: () {
                 // Navegar a la pantalla de gradiente geométrico
               },
-              child: Text('Gradiente Geométrico'),
             ),
             SizedBox(height: 20), // Espacio entre secciones
 
             // Sección de amortización
             Text(
               'Amortización',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.equalizer,
+              label: 'Alemana',
               onPressed: () {
                 // Navegar a la pantalla de amortización alemana
               },
-              child: Text('Alemana'),
             ),
             SizedBox(height: 10), // Espacio entre botones
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.balance,
+              label: 'Francesa',
               onPressed: () {
                 // Navegar a la pantalla de amortización francesa
               },
-              child: Text('Francesa'),
             ),
             SizedBox(height: 10), // Espacio entre botones
-            ElevatedButton(
+            _OptionButton(
+              icon: Icons.money_off,
+              label: 'Americana',
               onPressed: () {
                 // Navegar a la pantalla de amortización americana
               },
-              child: Text('Americana'),
             ),
           ],
         ),
@@ -140,3 +149,70 @@ Future<void> cargarPrestamos() async {
     );
   }
 }
+
+class _IconButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _IconButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon, color: Color.fromARGB(255, 133, 238, 159), size: 40),
+          onPressed: onPressed,
+        ),
+        Text(label, style: TextStyle(fontSize: 14)),
+      ],
+    );
+  }
+}
+
+class _OptionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _OptionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 280, // Ancho del botón
+      height: 60, // Alto del botón
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 133, 238, 159),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: const Color.fromRGBO(51, 53, 59, 1)), // Color del icono
+            SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(fontSize: 18, color: const Color.fromARGB(255, 7, 43, 28)), // Cambia el color del texto aquí
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+

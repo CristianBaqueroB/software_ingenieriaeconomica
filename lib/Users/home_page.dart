@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:software_ingenieriaeconomica/Users/SolicitudPrestamo.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/SolicitudPrestamo.dart';
 import 'package:software_ingenieriaeconomica/Users/CalculationPage.dart';
 import 'package:software_ingenieriaeconomica/Users/dashboard.dart';
 
-import 'package:software_ingenieriaeconomica/services/SettingsPage.dart'; // Importa SettingsPage
+import 'package:software_ingenieriaeconomica/Users/SettingsPage.dart'; // Importa SettingsPage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,18 +15,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
-  Color _bgColor = Color.fromRGBO(228, 236, 228, 1);
+  Color _bgColor = Color.fromRGBO(138, 224, 138, 1);
 
   final List<Widget> _navigationItems = [
     Icon(Icons.dashboard),
     Icon(Icons.home),
     Icon(Icons.calculate),
-    Icon(Icons.settings),
+   
     Icon(Icons.request_page),
+     Icon(Icons.settings),
   ];
 
   final List<Color> _bgColors = [
-    Color.fromRGBO(255, 255, 255, 1),
+    Color.fromRGBO(253, 253, 253, 1),
     Color.fromRGBO(255, 255, 255, 1),
     Color.fromRGBO(255, 255, 255, 1),
     Color.fromRGBO(255, 255, 255, 1),
@@ -44,7 +45,10 @@ class _HomePageState extends State<HomePage> {
         items: _navigationItems,
         index: _selectedIndex,
         height: 60,
+        color: Color.fromARGB(255, 133, 238, 159), // Color de la barra de navegación
+        buttonBackgroundColor: Color.fromARGB(255, 133, 238, 159),
         animationDuration: const Duration(milliseconds: 300),
+        
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
@@ -170,9 +174,9 @@ class _HomePageState extends State<HomePage> {
       case 2:
         return CalculationPage();
       case 3:
-        return SettingsPage(); // Cambia a SettingsPage aquí
-      case 4:
         return  SolicitudPrestamo(); 
+      case 4:
+        return   SettingsPage();
       default:
         return Center(child: Text("Página no encontrada", style: TextStyle(fontFamily: 'Roboto')));
     }
