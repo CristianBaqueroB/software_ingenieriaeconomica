@@ -7,43 +7,40 @@ class LoginController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final LocalAuthentication _localAuth = LocalAuthentication();
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  /// Método para iniciar sesión.
-  /// Retorna el rol del usuario ('admin' o 'usuario') si la autenticación es exitosa.
+  /// Método para iniciar sesión con cédula y contraseña.
   Future<String?> login(String cedula, String password) async {
     if (cedula.isEmpty || password.isEmpty) {
       throw Exception('Por favor, complete todos los campos.');
     }
 
     try {
-      // Busca al usuario por cédula en Firestore.
-      final userQuery = await _firestore
+      // Buscar en Firestore el correo asociado a la cédula
+      QuerySnapshot userQuery = await _firestore
           .collection('users')
           .where('cedula', isEqualTo: cedula)
+          .limit(1)
           .get();
 
-      if (userQuery.docs.isEmpty) {
-        throw Exception('Cédula no encontrada.');
+      // Si el usuario existe
+      if (userQuery.docs.isNotEmpty) {
+        // Obtener el email y rol del usuario
+        String email = userQuery.docs.first['email'];
+        String rol = userQuery.docs.first['rol'];
+
+        // Autenticar al usuario con Firebase usando el correo y la contraseña
+        await _auth.signInWithEmailAndPassword(email: email, password: password);
+
+        // Guardar la cédula y rol en SharedPreferences
+        final prefs = await _prefs;
+        await prefs.setString('cedula', cedula);
+        await prefs.setString('rol', rol);
+
+        return rol; // Retornar el rol del usuario
+      } else {
+        throw Exception('Cédula no encontrada en la base de datos.');
       }
-
-      final userDoc = userQuery.docs.first;
-      final email = userDoc.data()['email'];
-      final rol = userDoc.data()['rol']; // Asegúrate de que el campo 'rol' exista
-
-      if (email == null) {
-        throw Exception('Correo electrónico no asociado con la cédula.');
-      }
-
-      // Intenta autenticar al usuario con Firebase Auth.
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-
-      // Guarda la cédula en SharedPreferences para uso futuro.
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cedula', cedula);
-
-      // Retorna el rol del usuario.
-      print('Rol del usuario: $rol'); // Para depuración
-      return rol;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         throw Exception('Correo electrónico no encontrado.');
@@ -52,66 +49,72 @@ class LoginController {
       } else {
         throw Exception('Error de autenticación: ${e.message}');
       }
-    } on FirebaseException catch (e) {
-      throw Exception('Error en Firestore: ${e.message}');
     } catch (e) {
       throw Exception('Error: ${e.toString()}');
     }
   }
 
-  /// Método para autenticar usando biometría.
-  /// Retorna el rol del usuario si la autenticación es exitosa.
+  /// Método para autenticar al usuario con huella digital.
   Future<String?> authenticateWithBiometrics() async {
     bool authenticated = false;
-
     try {
       authenticated = await _localAuth.authenticate(
         localizedReason: 'Use su huella digital o reconocimiento facial para autenticarse',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-        ),
+        options: const AuthenticationOptions(stickyAuth: true),
       );
+
+      if (authenticated) {
+        final prefs = await _prefs;
+        String? cedula = prefs.getString('cedula');
+
+        // Validar que la cédula se haya recuperado correctamente
+        if (cedula == null) {
+          throw Exception('No se pudo recuperar la cédula necesaria para la autenticación.');
+        }
+
+        // Consultar Firestore para obtener el rol del usuario
+        final userQuery = await _firestore
+            .collection('users')
+            .where('cedula', isEqualTo: cedula)
+            .limit(1) // Limitar a un solo documento
+            .get();
+
+        if (userQuery.docs.isEmpty) {
+          throw Exception('Cédula no encontrada en la base de datos.');
+        }
+
+        final userDoc = userQuery.docs.first.data();
+        String rol = userDoc['rol'];
+
+        // ignore: unnecessary_null_comparison
+        if (rol == null) {
+          throw Exception('Rol del usuario no encontrado en la base de datos.');
+        }
+
+        return rol; // Retornar el rol del usuario
+      } else {
+        throw Exception('No se pudo autenticar usando biometría.');
+      }
     } catch (e) {
       throw Exception('Error de autenticación biométrica: ${e.toString()}');
     }
+  }
 
-    if (authenticated) {
-      final prefs = await SharedPreferences.getInstance();
-      final cedula = prefs.getString('cedula');
+  /// Método para verificar si el dispositivo puede usar la autenticación biométrica.
+  Future<bool> canCheckBiometrics() async {
+    return await _localAuth.canCheckBiometrics;
+  }
 
-      if (cedula == null) {
-        throw Exception('Cédula no encontrada en la caché.');
-      }
+  /// Método para obtener la cédula del último usuario utilizado desde SharedPreferences.
+  Future<String?> loadLastUserCedula() async {
+    final prefs = await _prefs;
+    return prefs.getString('cedula');
+  }
 
-      final userQuery = await _firestore
-          .collection('users')
-          .where('cedula', isEqualTo: cedula)
-          .get();
-
-      if (userQuery.docs.isEmpty) {
-        throw Exception('Cédula no encontrada en Firestore.');
-      }
-
-      final userDoc = userQuery.docs.first;
-      final email = userDoc.data()['email'];
-      final rol = userDoc.data()['rol']; // Asegúrate de que el campo 'rol' exista
-
-      if (email == null) {
-        throw Exception('Correo electrónico no asociado con la cédula.');
-      }
-
-      // Aquí deberías gestionar la contraseña de alguna manera segura.
-      // Por ejemplo, podrías usar un token o una sesión persistente en lugar de una contraseña.
-      String password = 'tu_contraseña_ficticia'; // Esto es solo un placeholder
-
-      // Intenta autenticar al usuario con Firebase Auth.
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-
-      // Retorna el rol del usuario.
-      print('Rol del usuario: $rol'); // Para depuración
-      return rol;
-    } else {
-      throw Exception('No se pudo autenticar usando biometría.');
-    }
+  /// Método para cerrar sesión.
+  Future<void> logout() async {
+    await _auth.signOut();
+    final prefs = await _prefs;
+    await prefs.clear(); // Borra todas las preferencias almacenadas
   }
 }

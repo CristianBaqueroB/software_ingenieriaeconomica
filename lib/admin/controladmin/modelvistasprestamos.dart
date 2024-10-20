@@ -12,6 +12,7 @@ class Loan {
   final String tipoTasa;
   final double totalPago;
   final String tipoprestamo;
+  final double prestamo;
 
   Loan({
     required this.id,
@@ -26,9 +27,9 @@ class Loan {
     required this.tasa,
     required this.tipoTasa,
     required this.totalPago,
-      required this.tipoprestamo, 
+    required this.tipoprestamo, 
+    required this.prestamo, 
   });
-
 
   /// Crea una instancia de Loan a partir de un documento de Firestore.
   factory Loan.fromDocument(Map<String, dynamic> data, String id) {
@@ -45,7 +46,8 @@ class Loan {
       numCuotas: data['num_cuotas'] ?? 0,
       tasa: _toDouble(data['tasa']),
       tipoTasa: data['tipo_tasa'] ?? 'Desconocido',
-     tipoprestamo: data['tipo_prestamo'] ?? 'Desconocido',
+      tipoprestamo: data['tipo_prestamo'] ?? 'Desconocido',
+      prestamo: (data['monto'] ?? 0.0).toDouble(), // Cambiado de = a :
     );
   }
 

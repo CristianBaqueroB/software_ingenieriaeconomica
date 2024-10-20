@@ -130,40 +130,54 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SizedBox(height: 20),
 
-              // Información del usuario
-              Card(
-                elevation: 5.0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Nombre: ${_controller.nombreController.text}',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Apellido: ${_controller.apellidoController.text}',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Correo: ${_controller.correoController.text}',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Cédula: ${_controller.cedula}',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+             // Información del usuario
+Card(
+  elevation: 5.0,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(15.0),
+  ),
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Nombre: ${_controller.nombreController.text}',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Apellido: ${_controller.apellidoController.text}',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Correo: ${_controller.correoController.text}',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Cédula: ${_controller.cedula}',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        // Muestra el monto del préstamo solo si es mayor que cero
+        if (_controller.montoPrestamo > 0)
+          Text(
+            'Monto Préstamo: \$${_controller.montoPrestamo.toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        // Muestra el saldo solo si es mayor que cero
+        if (_controller.saldo > 0)
+          Text(
+            'Saldo: \$${_controller.saldo.toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+      ],
+    ),
+  ),
+),
+
               SizedBox(height: 20),
 
               // Botón Editar Perfil con icono

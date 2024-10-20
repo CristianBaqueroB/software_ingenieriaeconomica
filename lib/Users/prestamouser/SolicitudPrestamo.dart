@@ -6,6 +6,7 @@ import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/pagar
 import 'package:software_ingenieriaeconomica/Users/prestamouser/Pagarcuotas.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/PrestamoInteresSim.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/historial_prestamos.dart';
+import 'package:software_ingenieriaeconomica/admin/solicitudincompuesto.dart';
 
 class SolicitudPrestamo extends StatefulWidget {
   @override
@@ -93,7 +94,11 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               icon: Icons.monetization_on,
               label: 'Interés Compuesto',
               onPressed: () {
-                // Navegar a la pantalla de interés compuesto
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PrestamoCompuestotPage()),
+                );
+              // Navegar a la pantalla de interés compuesto PrestamoCompuestotPage
               },
             ),
             SizedBox(height: 10), // Espacio entre botones

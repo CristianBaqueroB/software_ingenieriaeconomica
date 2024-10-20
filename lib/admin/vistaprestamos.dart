@@ -20,72 +20,26 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
   }
 
   void _loadLoans() {
-    _loanListFuture = _loanController.fetchLoanRequests(_filtroEstado);
+    setState(() {
+      _loanListFuture = _loanController.fetchLoanRequests(_filtroEstado);
+    });
   }
 
-  void _updateLoanStatus(String loanId, String newStatus) async {
-    try {
-      await _loanController.updateLoanRequestStatus(loanId, newStatus);
-      _loadLoans(); // Recargar préstamos
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Estado actualizado a: $newStatus')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al actualizar el estado.')),
-      );
-    }
-  }
-
-  Future<void> _confirmAcceptLoan(String loanId) async {
+  void _confirmDeleteLoan(BuildContext context, String loanId) async {
     bool confirm = await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Confirmar aceptación'),
-          content: Text('¿Estás seguro de que deseas aceptar este préstamo?'),
+          title: Text('Confirmar eliminación'),
+          content: Text('¿Estás seguro de que deseas eliminar esta solicitud de préstamo?'),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
+              onPressed: () => Navigator.of(context).pop(false),
               child: Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: Text('Aceptar'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm) {
-      _updateLoanStatus(loanId, 'aceptado');
-    }
-  }
-
-  Future<void> _confirmRejectLoan(String loanId) async {
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Confirmar rechazo'),
-          content: Text('¿Estás seguro de que deseas rechazar este préstamo?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: Text('Rechazar'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Eliminar'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             ),
           ],
@@ -94,7 +48,17 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
     );
 
     if (confirm) {
-      _updateLoanStatus(loanId, 'rechazado');
+      try {
+        await _loanController.deleteLoanRequest(loanId); // Método para eliminar
+        _loadLoans(); // Recargar préstamos
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Solicitud de préstamo eliminada')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar la solicitud: $e')),
+        );
+      }
     }
   }
 
@@ -139,7 +103,7 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error al cargar las solicitudes.'));
+                  return Center(child: Text('Error al cargar las solicitudes: ${snapshot.error}'));
                 }
 
                 final loans = snapshot.data ?? [];
@@ -160,22 +124,29 @@ class _GestionPrestamosPageState extends State<GestionPrestamosPage> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text('Cedula: ${loan.cedula}'),
                             Text('Estado: ${loan.estado}'),
                             Text('Fecha de Solicitud: ${DateFormat('dd/MM/yyyy').format(loan.fechaSolicitud)}'),
                             Text('Fecha Límite: ${DateFormat('dd/MM/yyyy').format(loan.fechaLimite)}'),
-                            Text('Tipo Prestamo: ${loan.tipoprestamo}'),
+                            Text('Tipo Préstamo: ${loan.tipoprestamo}'),
                           ],
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            if (loan.estado == 'pendiente') ...[
+                              IconButton(
+                                icon: Icon(Icons.check_circle, color: Colors.green),
+                                onPressed: () => _loanController.confirmAcceptLoan(context, loan.id, _loadLoans),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.cancel, color: Colors.red),
+                                onPressed: () => _loanController.confirmRejectLoan(context, loan.id, _loadLoans),
+                              ),
+                            ],
                             IconButton(
-                              icon: Icon(Icons.check_circle, color: Colors.green),
-                              onPressed: () => _confirmAcceptLoan(loan.id),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.cancel, color: Colors.red),
-                              onPressed: () => _confirmRejectLoan(loan.id),
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _confirmDeleteLoan(context, loan.id),
                             ),
                           ],
                         ),

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Importar para trabajar con SharedPreferences
 import 'package:software_ingenieriaeconomica/screens/login_screen.dart';
 
 class SettingsControllerAdmin {
@@ -12,39 +13,55 @@ class SettingsControllerAdmin {
   final TextEditingController correoController = TextEditingController();
   
   String? cedula;
-  String? rol; // Agrega una variable para el rol
+  String? rol; // Variable para el rol
 
+  /// Método para cargar los datos del usuario, basado en la cédula almacenada en SharedPreferences.
   Future<void> fetchUserData(BuildContext context) async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        QuerySnapshot userSnapshot = await _firestore
-            .collection('users')
-            .where('email', isEqualTo: user.email)
-            .get();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    cedula = prefs.getString('cedula');
+    rol = prefs.getString('rol'); // Recupera el rol desde el caché
 
-        if (userSnapshot.docs.isNotEmpty) {
-          var userData = userSnapshot.docs.first;
+    if (cedula == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se encontró cédula en el caché.')),
+      );
+      return;
+    }
 
-          nombreController.text = userData['firstName'] ?? '';
-          apellidoController.text = userData['lastName'] ?? '';
-          correoController.text = user.email ?? '';
-          cedula = userData['cedula'];
-          rol = userData['rol']; // Carga el rol del usuario
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Usuario no encontrado en Firestore.')),
-          );
-        }
-      } catch (e) {
+    try {
+      // Busca al usuario por cédula en Firestore.
+      QuerySnapshot userSnapshot = await _firestore
+          .collection('users')
+          .where('cedula', isEqualTo: cedula)
+          .get();
+
+      if (userSnapshot.docs.isNotEmpty) {
+        var userData = userSnapshot.docs.first;
+
+        nombreController.text = userData['firstName'] ?? '';
+        apellidoController.text = userData['lastName'] ?? '';
+        correoController.text = userData['email'] ?? '';
+        cedula = userData['cedula'];
+        rol = userData['rol']; // Carga el rol del usuario
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar los datos del usuario: $e')),
+          const SnackBar(content: Text('Usuario no encontrado en Firestore.')),
         );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar los datos del usuario: $e')),
+      );
     }
   }
-   Future<void> signOut(BuildContext context) async {
+
+  /// Método para cerrar sesión.
+  Future<void> signOut(BuildContext context) async {
     await _auth.signOut();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Limpia el caché al cerrar sesión
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => LoginPage(), // Asegúrate de que la ruta es correcta

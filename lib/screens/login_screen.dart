@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Importa esta librería para usar TextInputFormatter
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/login_controller.dart';
-import 'package:software_ingenieriaeconomica/Users/home_page.dart';
+import 'package:software_ingenieriaeconomica/Users/interfaz/home_page.dart';
 import 'package:software_ingenieriaeconomica/screens/reset_password_page.dart';
 import 'package:software_ingenieriaeconomica/screens/register_page.dart';
 import 'package:software_ingenieriaeconomica/admin/homepageadmin.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -15,12 +17,16 @@ class LoginPageState extends State<LoginPage> {
   final _cedulaController = TextEditingController();
   final _passwordController = TextEditingController();
   final LoginController _controller = LoginController();
+  final LocalAuthentication _localAuth = LocalAuthentication();
 
-  // Variable para manejar la visibilidad de la contraseña
   bool _isPasswordVisible = false;
-
-  // Variable para manejar el estado de carga
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedData();
+  }
 
   @override
   void dispose() {
@@ -29,94 +35,112 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  /// Función para manejar el inicio de sesión.
+  void _loadCachedData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? cachedCedula = prefs.getString('cedula');
+    String? cachedPassword = prefs.getString('password'); // Cargar la contraseña
+
+    if (cachedCedula != null) {
+      _cedulaController.text = cachedCedula;
+    }
+    if (cachedPassword != null) {
+      _passwordController.text = cachedPassword; // Rellenar el campo de contraseña
+    }
+  }
+
   void _handleLogin() async {
     String cedula = _cedulaController.text.trim();
     String password = _passwordController.text;
 
-    // Validar que los campos no estén vacíos
     if (cedula.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor, complete todos los campos.')),
-      );
+      _showSnackBar('Por favor, complete todos los campos.');
       return;
     }
 
     setState(() {
-      _isLoading = true; // Mostrar indicador de carga
+      _isLoading = true;
     });
 
     try {
-      // Llamar al método login del controlador y obtener el rol
       String? rol = await _controller.login(cedula, password);
 
-      if (rol != null) {
-        if (rol == 'admin') {
-          // Redirigir a la página de administrador
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdminHomePage()),
-          );
-        } else if (rol == 'usuario') {
-          // Redirigir a la página de usuario
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else {
-          // Manejar un rol desconocido
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Rol desconocido: $rol')),
-          );
-        }
-      }
+      await _handleLoginSuccess(cedula, rol);
     } catch (e) {
-      // Manejar errores y mostrar el mensaje de error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      _showSnackBar(e.toString());
     } finally {
       setState(() {
-        _isLoading = false; // Ocultar indicador de carga
+        _isLoading = false;
       });
     }
   }
 
-  /// Función para manejar la autenticación biométrica.
-  void _handleBiometricAuth() async {
-    setState(() {
-      _isLoading = true; // Mostrar indicador de carga
-    });
+  Future<void> _handleLoginSuccess(String cedula, String? rol) async {
+    if (rol != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cedula', cedula);
+      await prefs.setString('password', _passwordController.text); // Guardar contraseña en caché
+
+      if (rol == 'admin') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => AdminHomePage()),
+        );
+      } else if (rol == 'usuario') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        _showSnackBar('Rol desconocido: $rol');
+      }
+    }
+  }
+
+  Future<void> _authenticateWithBiometrics() async {
+    String cedula = _cedulaController.text.trim();
+
+    // Verifica si la cédula está llena
+    if (cedula.isEmpty) {
+      _showSnackBar('Por favor, ingrese su cédula antes de autenticar con biometría.');
+      return;
+    }
 
     try {
-      String? rol = await _controller.authenticateWithBiometrics();
+      setState(() {
+        _isLoading = true;
+      });
 
-      if (rol != null) {
-        if (rol == 'admin') {
-          // Redirigir a la página de administrador
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdminHomePage()),
-          );
-        } else if (rol == 'usuario') {
-          // Redirigir a la página de usuario
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else {
-          // Manejar un rol desconocido
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Rol desconocido: $rol')),
-          );
-        }
+      bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (!canCheckBiometrics) {
+        _showSnackBar('Biometría no disponible.');
+        return;
+      }
+
+      bool authenticated = await _localAuth.authenticate(
+        localizedReason: 'Por favor, autentíquese para continuar',
+        options: const AuthenticationOptions(
+          useErrorDialogs: true,
+          stickyAuth: true,
+        ),
+      );
+
+      if (authenticated) {
+        // Llama al método de inicio de sesión solo con cédula
+        String? rol = await _controller.authenticateWithBiometrics();
+
+        await _handleLoginSuccess(cedula, rol);
       }
     } catch (e) {
-      // Manejar errores y mostrar el mensaje de error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      _showSnackBar('Error: $e');
     } finally {
       setState(() {
-        _isLoading = false; // Ocultar indicador de carga
+        _isLoading = false;
       });
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -124,7 +148,6 @@ class LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Column(
         children: [
-          // Encabezado de la aplicación
           Container(
             height: 90,
             decoration: BoxDecoration(
@@ -145,7 +168,6 @@ class LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // Título de la página
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Center(
@@ -160,14 +182,13 @@ class LoginPageState extends State<LoginPage> {
             ),
           ),
           const SizedBox(height: 20),
-          // Formulario de login
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // Campo de la cédula (solo números y máximo 11 caracteres)
+                    // Campo de la cédula
                     TextField(
                       controller: _cedulaController,
                       decoration: InputDecoration(
@@ -179,8 +200,8 @@ class LoginPageState extends State<LoginPage> {
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly, // Solo permite dígitos
-                        LengthLimitingTextInputFormatter(11), // Limitar a 11 caracteres
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(11),
                       ],
                     ),
                     SizedBox(height: 30),
@@ -195,9 +216,7 @@ class LoginPageState extends State<LoginPage> {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
@@ -206,7 +225,7 @@ class LoginPageState extends State<LoginPage> {
                           },
                         ),
                       ),
-                      obscureText: !_isPasswordVisible,
+                      obscureText: !_isPasswordVisible, // Controlar la visibilidad de la contraseña
                     ),
                     SizedBox(height: 30),
                     // Botón de inicio de sesión
@@ -226,15 +245,9 @@ class LoginPageState extends State<LoginPage> {
                           : Text('Iniciar sesión'),
                     ),
                     SizedBox(height: 10),
-                    // Botón para autenticación biométrica
-                    ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _handleBiometricAuth,
-                      icon: Icon(
-                        Icons.fingerprint,
-                        size: 30, // Tamaño adecuado del ícono
-                        color: Colors.white,
-                      ),
-                      label: Text('Autenticación Biométrica'),
+                    // Botón de autenticación biométrica
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _authenticateWithBiometrics,
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
@@ -242,6 +255,7 @@ class LoginPageState extends State<LoginPage> {
                         backgroundColor: Color.fromARGB(255, 133, 238, 159),
                         minimumSize: Size(double.infinity, 50),
                       ),
+                      child: Text('Iniciar sesión con biometría'),
                     ),
                     SizedBox(height: 10),
                     // Navegar a la página de registro

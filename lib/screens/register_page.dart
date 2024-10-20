@@ -64,6 +64,8 @@ class RegisterPageState extends State<RegisterPage> {
         'lastName': lastName,
         'cedula': cedula, // Guardar la cédula como un campo en el documento
         'rol': 'usuario', // Asignar rol predeterminado
+        'saldo': 0.0,
+        'prestamo':0.0
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
