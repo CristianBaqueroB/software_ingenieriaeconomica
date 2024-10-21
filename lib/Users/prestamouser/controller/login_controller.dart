@@ -54,51 +54,51 @@ class LoginController {
     }
   }
 
-  /// Método para autenticar al usuario con huella digital.
-  Future<String?> authenticateWithBiometrics() async {
-    bool authenticated = false;
-    try {
-      authenticated = await _localAuth.authenticate(
-        localizedReason: 'Use su huella digital o reconocimiento facial para autenticarse',
-        options: const AuthenticationOptions(stickyAuth: true),
-      );
+Future<String?> authenticateWithBiometrics() async {
+  try {
+    bool authenticated = await _localAuth.authenticate(
+      localizedReason: 'Use su huella digital o reconocimiento facial para autenticarse',
+      options: const AuthenticationOptions(stickyAuth: true),
+    );
 
-      if (authenticated) {
-        final prefs = await _prefs;
-        String? cedula = prefs.getString('cedula');
+    if (authenticated) {
+      final prefs = await SharedPreferences.getInstance();
+      String? cedula = prefs.getString('cedula');
+      
+      print('Cédula recuperada para biometría: $cedula');
 
-        // Validar que la cédula se haya recuperado correctamente
-        if (cedula == null) {
-          throw Exception('No se pudo recuperar la cédula necesaria para la autenticación.');
-        }
-
-        // Consultar Firestore para obtener el rol del usuario
-        final userQuery = await _firestore
-            .collection('users')
-            .where('cedula', isEqualTo: cedula)
-            .limit(1) // Limitar a un solo documento
-            .get();
-
-        if (userQuery.docs.isEmpty) {
-          throw Exception('Cédula no encontrada en la base de datos.');
-        }
-
-        final userDoc = userQuery.docs.first.data();
-        String rol = userDoc['rol'];
-
-        // ignore: unnecessary_null_comparison
-        if (rol == null) {
-          throw Exception('Rol del usuario no encontrado en la base de datos.');
-        }
-
-        return rol; // Retornar el rol del usuario
-      } else {
-        throw Exception('No se pudo autenticar usando biometría.');
+      if (cedula == null) {
+        throw Exception('No se pudo recuperar la cédula necesaria para la autenticación.');
       }
-    } catch (e) {
-      throw Exception('Error de autenticación biométrica: ${e.toString()}');
+
+      final userQuery = await _firestore
+          .collection('users')
+          .where('cedula', isEqualTo: cedula)
+          .limit(1)
+          .get();
+
+      if (userQuery.docs.isEmpty) {
+        throw Exception('Cédula no encontrada en la base de datos.');
+      }
+
+      final userDoc = userQuery.docs.first.data();
+      String rol = userDoc['rol'];
+      String email = userDoc['email'];
+
+      print('Datos de usuario recuperados de Firebase: email=$email, rol=$rol');
+
+      await _auth.signInWithEmailAndPassword(email: email, password: prefs.getString('password')!);
+
+      return rol;
+    } else {
+      throw Exception('No se pudo autenticar usando biometría.');
     }
+  } catch (e) {
+    print('Error de autenticación biométrica: ${e.toString()}');
+    throw Exception('Error de autenticación biométrica: ${e.toString()}');
   }
+}
+
 
   /// Método para verificar si el dispositivo puede usar la autenticación biométrica.
   Future<bool> canCheckBiometrics() async {
@@ -114,7 +114,7 @@ class LoginController {
   /// Método para cerrar sesión.
   Future<void> logout() async {
     await _auth.signOut();
-    final prefs = await _prefs;
-    await prefs.clear(); // Borra todas las preferencias almacenadas
+    //final prefs = await _prefs;
+    //await prefs.clear(); 
   }
 }

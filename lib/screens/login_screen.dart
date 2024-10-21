@@ -35,64 +35,74 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _loadCachedData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? cachedCedula = prefs.getString('cedula');
-    String? cachedPassword = prefs.getString('password'); // Cargar la contraseña
+void _loadCachedData() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? cachedCedula = prefs.getString('cedula');
+  String? cachedPassword = prefs.getString('password');
 
-    if (cachedCedula != null) {
-      _cedulaController.text = cachedCedula;
-    }
-    if (cachedPassword != null) {
-      _passwordController.text = cachedPassword; // Rellenar el campo de contraseña
-    }
+  print('Cédula en caché: $cachedCedula');
+  print('Contraseña en caché: $cachedPassword');
+
+  if (cachedCedula != null) {
+    _cedulaController.text = cachedCedula;
   }
+  if (cachedPassword != null) {
+    _passwordController.text = cachedPassword;
+  }
+}
 
   void _handleLogin() async {
-    String cedula = _cedulaController.text.trim();
-    String password = _passwordController.text;
+  String cedula = _cedulaController.text.trim();
+  String password = _passwordController.text;
 
-    if (cedula.isEmpty || password.isEmpty) {
-      _showSnackBar('Por favor, complete todos los campos.');
-      return;
-    }
+  if (cedula.isEmpty || password.isEmpty) {
+    _showSnackBar('Por favor, complete todos los campos.');
+    return;
+  }
 
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    String? rol = await _controller.login(cedula, password);
+    await _handleLoginSuccess(cedula, rol);
+
+    // Verifica si los datos se guardan correctamente
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    print('Cédula guardada: ${prefs.getString('cedula')}');
+    print('Contraseña guardada: ${prefs.getString('password')}');
+  } catch (e) {
+    _showSnackBar(e.toString());
+  } finally {
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
+  }
+}
 
-    try {
-      String? rol = await _controller.login(cedula, password);
+Future<void> _handleLoginSuccess(String cedula, String? rol) async {
+  if (rol != null) {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cedula', cedula);
+    await prefs.setString('password', _passwordController.text);
 
-      await _handleLoginSuccess(cedula, rol);
-    } catch (e) {
-      _showSnackBar(e.toString());
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+    print('Cédula y contraseña guardadas en caché.');
+
+    if (rol == 'admin') {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => AdminHomePage()),
+      );
+    } else if (rol == 'usuario') {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } else {
+      _showSnackBar('Rol desconocido: $rol');
     }
   }
+}
 
-  Future<void> _handleLoginSuccess(String cedula, String? rol) async {
-    if (rol != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cedula', cedula);
-      await prefs.setString('password', _passwordController.text); // Guardar contraseña en caché
-
-      if (rol == 'admin') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => AdminHomePage()),
-        );
-      } else if (rol == 'usuario') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-      } else {
-        _showSnackBar('Rol desconocido: $rol');
-      }
-    }
-  }
 
   Future<void> _authenticateWithBiometrics() async {
     String cedula = _cedulaController.text.trim();
@@ -207,7 +217,7 @@ class LoginPageState extends State<LoginPage> {
                     SizedBox(height: 30),
                     // Campo de la contraseña
                     TextField(
-                      controller: _passwordController,
+                      //controller: _passwordController,
                       decoration: InputDecoration(
                         hintText: "Ingrese su contraseña",
                         labelText: "Contraseña",
