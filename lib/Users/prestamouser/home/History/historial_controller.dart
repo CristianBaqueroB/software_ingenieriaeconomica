@@ -7,15 +7,16 @@ class Prestamo {
   final double interes;
   final double monto;
   final double montoPorCuota;
-  final int numCuotas;
+  final int numCuotas; // Este campo es de tipo int
   final double tasa;
   final String tipoTasa;
   final double totalPago;
   final String tipoprestamo;
+  
   // Nueva propiedad que indica si el pago está atrasado
   bool get atrasado => DateTime.now().isAfter(fechaLimite);
 
-   Prestamo({
+  Prestamo({
     required this.id,
     required this.cedula,
     required this.estado,
@@ -31,7 +32,7 @@ class Prestamo {
     required this.tipoprestamo,
   });
 
-factory Prestamo.fromDocument(Map<String, dynamic> data, String id) {
+  factory Prestamo.fromDocument(Map<String, dynamic> data, String id) {
     return Prestamo(
       id: id,
       estado: data['estado'] ?? 'Sin estado',
@@ -42,11 +43,10 @@ factory Prestamo.fromDocument(Map<String, dynamic> data, String id) {
       totalPago: _toDouble(data['total_pago']),
       cedula: data['cedula'] ?? 'Sin cédula',
       montoPorCuota: _toDouble(data['monto_por_cuota']),
-      numCuotas: data['num_cuotas'] ?? 0,
+      numCuotas: (data['num_cuotas'] ?? 0).toInt(), // Convertido a int
       tasa: _toDouble(data['tasa']),
       tipoTasa: data['tipo_tasa'] ?? 'Desconocido',
       tipoprestamo: data['tipo_prestamo'] ?? 'Desconocido',
-
     );
   }
 

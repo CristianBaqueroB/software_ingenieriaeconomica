@@ -118,11 +118,11 @@ Future<void> requestLoan({
     'estado': status,
     'fecha_limite': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
     'fecha_solicitud': Timestamp.now(),
-    'interes_total': interest, // Intereses totales calculados
+    'interes': interest, // Intereses totales calculados
     'monto': loanAmount,
     'num_cuotas': loanTerm,
     'tasa': rate, // Mantener tasa como se ingresó
-    'tipo_prestamo': 'Amortización Constante', // Cambiar según el tipo de préstamo
+    'tipo_prestamo': 'Amortización Alemana', // Cambiar según el tipo de préstamo
     'tipo_tasa': rateType == 'anual' ? 'Anual' : 'Mensual',
     'total_pago': totalPayment, // Total a pagar
   });

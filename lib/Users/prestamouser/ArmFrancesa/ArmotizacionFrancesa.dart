@@ -1,187 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmFrancesa/ArmotizacionFrencesacontroller.dart';
 
-class FrenchAmortizationp extends StatefulWidget {
-  const FrenchAmortizationp({super.key});
+class RequestFrenchLoanPage extends StatefulWidget {
+  const RequestFrenchLoanPage({super.key});
 
   @override
-  _FrenchAmortizationState createState() => _FrenchAmortizationState();
+  _RequestFrenchLoanPageState createState() => _RequestFrenchLoanPageState();
 }
 
-class _FrenchAmortizationState extends State<FrenchAmortizationp> {
-  final TextEditingController _loanAmountController = TextEditingController(); // Monto del préstamo
-  final TextEditingController _rateController = TextEditingController(); // Tasa de interés
-  final TextEditingController _loanTermController = TextEditingController(); // Plazo del préstamo en meses
-
-  List<Map<String, dynamic>> _amortizationTable = []; // Tabla de amortización
-  double _fixedQuota = 0; // Cuota fija mensual
-
-  final FrenchAmortizationController _controller = FrenchAmortizationController(); // Instancia del controlador
-
-  // Variable para almacenar si la tasa ingresada es anual o mensual
+class _RequestFrenchLoanPageState extends State<RequestFrenchLoanPage> {
+  final _cedulaController = TextEditingController();
+  final _loanAmountController = TextEditingController();
+  final _rateController = TextEditingController();
+  final _loanTermController = TextEditingController();
+  final _controller = FrenchAmortizationController();
   bool _isAnnualRate = true;
+  String _statusMessage = '';
 
-  // Función para calcular la cuota fija y generar la tabla
-  void _calculateAmortization() {
+  // Función para solicitar el préstamo
+  Future<void> _requestLoan() async {
     setState(() {
-      _amortizationTable.clear(); // Limpiar tabla anterior
-
-      double loanAmount = double.tryParse(_loanAmountController.text) ?? 0.0;
-      double rate = double.tryParse(_rateController.text) ?? 0.0;
-      int loanTerm = int.tryParse(_loanTermController.text) ?? 0;
-
-      // Si la tasa es anual, convertirla a mensual
-      if (_isAnnualRate) {
-        rate = rate / 12;
-      }
-
-      if (loanAmount > 0 && rate > 0 && loanTerm > 0) {
-  // Usar el controlador para calcular la cuota fija
-  _fixedQuota = _controller.calculateFixedQuota(
-    loanAmount: loanAmount,
-    interestRate: rate, // Cambiado de annualRate a interestRate
-    loanTerm: loanTerm,
-    isAnnualRate: true, // Aquí debes especificar si es tasa anual o mensual
-  );
-
-  // Generar la tabla de amortización
-  _amortizationTable = _controller.generateAmortizationTable(
-    loanAmount: loanAmount,
-    interestRate: rate, // Cambiado de annualRate a interestRate
-    loanTerm: loanTerm,
-    isAnnualRate: true, // Aquí debes especificar si es tasa anual o mensual
-  );
-}
-
+      _statusMessage = ''; // Reiniciar el mensaje de estado
     });
+
+    String cedula = _cedulaController.text;
+    double loanAmount = double.tryParse(_loanAmountController.text) ?? 0.0;
+    double rate = double.tryParse(_rateController.text) ?? 0.0;
+    int loanTerm = int.tryParse(_loanTermController.text) ?? 0;
+
+    if (cedula.isEmpty || loanAmount <= 0 || rate <= 0 || loanTerm <= 0) {
+      setState(() {
+        _statusMessage = 'Por favor, complete todos los campos con valores válidos.';
+      });
+      return;
+    }
+
+    try {
+      await _controller.requestFrenchLoan(
+        cedula: cedula,
+        loanAmount: loanAmount,
+        rate: rate,
+        loanTerm: loanTerm,
+        status: 'pendiente', // Puedes cambiar el estado según tu lógica
+        isAnnualRate: _isAnnualRate,
+      );
+
+      setState(() {
+        _statusMessage = 'Préstamo solicitado exitosamente.';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = e.toString(); // Mostrar el error
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Amortización Francés'),
-      ),
+      appBar: AppBar(title: const Text('Solicitar Préstamo - Amortización Francesa')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Ingrese los datos del préstamo:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Ingrese los datos del préstamo:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            TextField(
-              controller: _loanAmountController,
-              decoration: const InputDecoration(
-                labelText: 'Monto del préstamo (P)',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
+            _buildTextField(controller: _cedulaController, label: 'Cédula'),
             const SizedBox(height: 10),
-            TextField(
-              controller: _rateController,
-              decoration: const InputDecoration(
-                labelText: 'Tasa de interés',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
+            _buildTextField(controller: _loanAmountController, label: 'Monto del préstamo (P)'),
             const SizedBox(height: 10),
-            TextField(
-              controller: _loanTermController,
-              decoration: const InputDecoration(
-                labelText: 'Duración del préstamo (meses)',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 20),
-            // Selector para elegir si la tasa es anual o mensual
-            const Text(
-              'Seleccione si la tasa es anual o mensual:',
-              style: TextStyle(fontSize: 16),
-            ),
-            DropdownButton<bool>(
-              value: _isAnnualRate,
-              items: const [
-                DropdownMenuItem(
-                  value: true,
-                  child: Text('Tasa Anual'),
-                ),
-                DropdownMenuItem(
-                  value: false,
-                  child: Text('Tasa Mensual'),
-                ),
-              ],
-              onChanged: (bool? newValue) {
-                setState(() {
-                  _isAnnualRate = newValue!;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calculateAmortization,
-              child: const Text('Calcular Amortización'),
-            ),
-            const SizedBox(height: 20),
-            if (_fixedQuota > 0)
-              Text(
-                'Cuota mensual fija: ${_fixedQuota.toStringAsFixed(2)} USD',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            const SizedBox(height: 20),
-            const Text(
-              'Tabla de Amortización:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            _buildTextField(controller: _rateController, label: 'Tasa de interés (%)'),
             const SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _amortizationTable.length,
-              itemBuilder: (context, index) {
-                final data = _amortizationTable[index];
-                return Card(
-                  elevation: 8.0,
-                  margin: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mes ${data['month']}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Cuota: ${data['quota'].toStringAsFixed(2)} USD,\n',
-                        ),
-                        Text(
-                          'Intereses: ${data['interest'].toStringAsFixed(2)} USD,\n',
-                        ),
-                        Text(
-                          'Principal: ${data['principal'].toStringAsFixed(2)} USD.\n',
-                        ),
-                        Text(
-                          'Saldo Pendiente: ${data['balance'].toStringAsFixed(2)} USD',
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+            _buildTextField(controller: _loanTermController, label: 'Duración del préstamo (meses)'),
+            const SizedBox(height: 20),
+            _buildRateTypeSelector(),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: _requestLoan, child: const Text('Solicitar Préstamo')),
+            const SizedBox(height: 20),
+            if (_statusMessage.isNotEmpty)
+              Text(_statusMessage, style: const TextStyle(fontSize: 16, color: Colors.red)),
           ],
         ),
       ),
+    );
+  }
+
+  // Widget para construir un campo de texto con estilo reutilizable
+  Widget _buildTextField({required TextEditingController controller, required String label}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+      keyboardType: TextInputType.number,
+    );
+  }
+
+  // Widget para construir el selector de tipo de tasa (anual o mensual)
+  Widget _buildRateTypeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Seleccione si la tasa es anual o mensual:', style: TextStyle(fontSize: 16)),
+        DropdownButton<bool>(
+          value: _isAnnualRate,
+          items: const [
+            DropdownMenuItem(value: true, child: Text('Tasa Anual')),
+            DropdownMenuItem(value: false, child: Text('Tasa Mensual')),
+          ],
+          onChanged: (newValue) => setState(() => _isAnnualRate = newValue!),
+        ),
+      ],
     );
   }
 }

@@ -31,52 +31,27 @@ class AmericanLoanController {
     int months = int.tryParse(monthsController.text) ?? 0;
     int days = int.tryParse(daysController.text) ?? 0;
 
-    // Asegurarse de que al menos uno de los campos esté lleno
     if (years > 0 || months > 0 || days > 0) {
-      // Convertir años a meses y días a meses
-      totalMonths = years  + (months/12) + (days / 365); // Suponemos 30 días por mes
+      totalMonths = years  + months/12 + (days / 30); // Convertimos todo a meses
     } else {
       throw Exception('Debes llenar al menos uno de los campos de tiempo.');
     }
   }
 
-  // Función para obtener la tasa de interés
+  // Función para obtener la tasa de interés anual
   double getInterestRate() {
-    double rate = double.tryParse(annualRateController.text) ?? 0.0;
-    return rate / 100; // Mantener tasa anual
+    return (double.tryParse(annualRateController.text) ?? 0.0) / 100;
   }
 
   // Función para calcular la amortización americana
   Future<void> calculateAmortization() async {
     double loanAmount = double.tryParse(loanAmountController.text) ?? 0.0;
     double annualRate = getInterestRate();
-
-    // Convertir tiempo a meses
     convertTimeToMonths();
 
     if (totalMonths > 0 && loanAmount > 0 && annualRate > 0) {
-      // Limpiar resultados anteriores
-      interestPayments.clear();
-      totalInterestPaid = 0.0; // Reiniciar el total de intereses
-
-      // Calcular los pagos periódicos de intereses
-      fixedInterestPayment = loanAmount * annualRate; // Intereses mensuales
-
-      // Calcular el pago final del capital
-      finalPayment = loanAmount;
-
-      // Generar pagos individuales de intereses por cada mes
-      for (int month = 1; month <= totalMonths; month++) {
-        interestPayments.add({
-          'month': month,
-          'interest': fixedInterestPayment,
-          'isFinal': month == totalMonths,
-        });
-
-        // Sumar al total de intereses pagados
-        totalInterestPaid += fixedInterestPayment;
-      }
-
+      // Inicializar cálculos
+      _initializeCalculations(loanAmount, annualRate);
       // Guardar la solicitud en Firestore
       await saveLoanRequest(loanAmount);
     } else {
@@ -84,46 +59,55 @@ class AmericanLoanController {
     }
   }
 
+  // Inicializa cálculos y genera la tabla de amortización
+  void _initializeCalculations(double loanAmount, double annualRate) {
+    interestPayments.clear();
+    totalInterestPaid = 0.0;
+
+    fixedInterestPayment = loanAmount * annualRate; // Pago mensual de intereses
+    finalPayment = loanAmount; // Pago final del capital
+
+    for (int month = 1; month <= totalMonths; month++) {
+      interestPayments.add({
+        'month': month,
+        'interest': fixedInterestPayment,
+        'isFinal': month == totalMonths,
+      });
+      totalInterestPaid += fixedInterestPayment;
+    }
+  }
+
   // Función para guardar la solicitud en Firestore
   Future<void> saveLoanRequest(double loanAmount) async {
-    final FirebaseAuth _auth = FirebaseAuth.instance;
-    User? user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
-      // Manejar el caso en el que el usuario no está autenticado
-      throw Exception('Usuario no autenticado');
-    }
+    if (user == null) throw Exception('Usuario no autenticado');
 
-    // Obtener la cédula del usuario logueado desde Firestore
-    String uid = user.uid;
-    String cedula = idController.text; // Obtén la cédula desde el controlador
+    String cedula = idController.text;
+    String userCedula = await getCedulaFromFirestore(user.uid);
 
-    // Obtener la cédula del usuario logueado
-    String userCedula = await getCedulaFromFirestore(uid);
     if (userCedula != cedula) {
       throw Exception('La cédula no coincide con la del usuario logueado.');
     }
 
-    // Calcular la fecha límite
-    DateTime dueDate = DateTime.now().add(Duration(days: (totalMonths * 30).round())); // Asumimos 30 días por mes
+    DateTime dueDate = DateTime.now().add(Duration(days: (totalMonths * 30).round()));
 
-    // Guardar la solicitud en Firestore
     await FirebaseFirestore.instance.collection('solicitudes_prestamo').add({
       'cedula': cedula,
-      'estado': 'pendiente',
+      'estado': 'pendiente', // Puedes ajustar este estado según tu lógica
       'fecha_solicitud': Timestamp.now(),
-      'interes': totalInterestPaid,
+      'fecha_limite': Timestamp.fromDate(dueDate),
       'monto': loanAmount,
-      'num_cuotas': totalMonths,
+      'num_cuotas': totalMonths.toInt(), // Convertido a int
       'tasa': double.tryParse(annualRateController.text) ?? 0.0,
       'tipo_prestamo': 'Amortización Americana',
-      'monto_por_cuota': fixedInterestPayment, // Guardamos el pago periódico de intereses
-      'total_pago': totalInterestPaid + finalPayment,
-      'fecha_limite': Timestamp.fromDate(dueDate), // Guardamos la fecha límite
       'tipo_tasa': 'Anual',
+      'interes': totalInterestPaid,
+      'monto_por_cuota': fixedInterestPayment,
+      'total_pago': totalInterestPaid + finalPayment,
     });
 
-    // Guardar la tabla de amortización en Firestore
+    // Guarda la tabla de amortización en la colección 'prestamos'
     await FirebaseFirestore.instance.collection('prestamos').add({
       'cedula': cedula,
       'tipo_prestamo': 'Amortización Americana',
@@ -134,6 +118,6 @@ class AmericanLoanController {
   // Función para obtener la cédula del usuario desde Firestore
   Future<String> getCedulaFromFirestore(String uid) async {
     DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    return userDoc['cedula'] ?? ''; // Devuelve la cédula del usuario, o vacío si no existe
+    return userDoc['cedula'] ?? '';
   }
 }

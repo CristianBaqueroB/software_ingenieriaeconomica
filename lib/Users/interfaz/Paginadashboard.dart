@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:software_ingenieriaeconomica/Users/RetirarDinero/RetirarDinero.dart';
 import 'package:software_ingenieriaeconomica/Users/interfaz/DetalleTransferencia.dart';
 import 'package:software_ingenieriaeconomica/Users/interfaz/RecargarSaldo.dart';
 import 'package:software_ingenieriaeconomica/Users/interfaz/transferencia_dinero.dart';
@@ -134,7 +135,7 @@ class _SaldoPrestamoWidgetState extends State<SaldoPrestamoWidget> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => Detalletransferencia ()),
+                      MaterialPageRoute(builder: (context) => DetalleTransferencia ()),
                     );
                     // Lógica para ver detalle de movimientos TransferenciaDineroPage 
                     print('Ver detalle de movimientos');
@@ -144,6 +145,25 @@ class _SaldoPrestamoWidgetState extends State<SaldoPrestamoWidget> {
                       Icon(Icons.receipt),
                       SizedBox(width: 8),
                       Text('Ver detalle de movimientos'),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RetiroScreen ()),
+                    );
+                    // Lógica para ver detalle de movimientos TransferenciaDineroPage 
+                    print('Retirar Dinero');
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.receipt),
+                      SizedBox(width: 8),
+                      Text('Retirar Dinero'),
                     ],
                   ),
                 ),

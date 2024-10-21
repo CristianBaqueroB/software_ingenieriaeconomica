@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Asegúrate de importar
 import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmAlemana/armotizacionAlemana.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmAmericana/ArmotizacionAmericana.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmFrancesa/ArmotizacionFrancesa.dart';
-import 'package:software_ingenieriaeconomica/Users/prestamouser/GradientGeo/GradieSoli.dart';
+
 import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/pagar_cuotacontroller.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/Pagarcuotas.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/PresSimple/PrestamoInteresSim.dart';
@@ -105,26 +105,10 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               // Navegar a la pantalla de interés compuesto PrestamoCompuestotPage
               },
             ),
-            SizedBox(height: 10), // Espacio entre botones
-            _OptionButton(
-              icon: Icons.trending_up,
-              label: 'Gradiente Aritmético',
-              onPressed: () {
-                // Navegar a la pantalla de gradiente aritmético
-              },
-            ),
-            SizedBox(height: 10), // Espacio entre botones
-            _OptionButton(
-              icon: Icons.trending_flat,
-              label: 'Gradiente Geométrico',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) =>  GeometricGradientLoanRequest()),
-                );
+            
                 // Navegar a la pantalla de gradiente geométrico GeometricGradientLoanRequest
-              },
-            ),
+              
+            
             SizedBox(height: 20), // Espacio entre secciones
 
             // Sección de amortización
@@ -150,7 +134,7 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               onPressed: () {
                  Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => FrenchAmortizationp ()),
+                  MaterialPageRoute(builder: (context) => RequestFrenchLoanPage ()),
                 );// Navegar a la pantalla de amortización francesa LoanRequestPage ()
               },
             ),

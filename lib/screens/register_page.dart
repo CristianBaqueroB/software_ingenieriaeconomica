@@ -1,8 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Importar para usar TextInputFormatter
 import 'package:software_ingenieriaeconomica/screens/login_screen.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -27,7 +26,10 @@ class RegisterPageState extends State<RegisterPage> {
     final password = _passwordController.text;
 
     // Verificar si la cédula ya está registrada
-    final cedulaSnapshot = await _firestore.collection('users').where('cedula', isEqualTo: cedula).get();
+    final cedulaSnapshot = await _firestore
+        .collection('users')
+        .where('cedula', isEqualTo: cedula)
+        .get();
     if (cedulaSnapshot.docs.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('La cédula ya está registrada.')),
@@ -65,7 +67,7 @@ class RegisterPageState extends State<RegisterPage> {
         'cedula': cedula, // Guardar la cédula como un campo en el documento
         'rol': 'usuario', // Asignar rol predeterminado
         'saldo': 0.0,
-        'prestamo':0.0
+        'prestamo': 0.0,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -107,25 +109,25 @@ class RegisterPageState extends State<RegisterPage> {
           },
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Center(
-              child: Text(
-                'Registro',
-                style: TextStyle(
-                  color: Color.fromARGB(255, 133, 238, 159),
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Center(
+                child: Text(
+                  'Registro',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 133, 238, 159),
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
                     TextField(
@@ -134,9 +136,14 @@ class RegisterPageState extends State<RegisterPage> {
                         hintText: "Ingrese Número de Cédula",
                         labelText: "Número de Cédula",
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(11),
+                      ],
                     ),
                     SizedBox(height: 20),
                     TextField(
@@ -145,7 +152,7 @@ class RegisterPageState extends State<RegisterPage> {
                         hintText: "Ingrese Primer Nombre",
                         labelText: "Primer Nombre",
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
@@ -156,7 +163,7 @@ class RegisterPageState extends State<RegisterPage> {
                         hintText: "Ingrese Apellido",
                         labelText: "Apellido",
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
@@ -167,7 +174,7 @@ class RegisterPageState extends State<RegisterPage> {
                         hintText: "Ingrese Correo Electrónico",
                         labelText: "Correo Electrónico",
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
@@ -178,33 +185,37 @@ class RegisterPageState extends State<RegisterPage> {
                         hintText: "Ingrese Contraseña",
                         labelText: "Contraseña",
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       obscureText: true,
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 30),
                     ElevatedButton(
                       onPressed: _register,
+                      // ignore: sort_child_properties_last
                       child: Text(
                         'Registrarse',
                         style: TextStyle(
-                          color: Color.fromARGB(255, 255, 255, 255),
+                          color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 133, 238, 159),
-                        minimumSize: Size(double.infinity, 30), // Botón de ancho completo
+                        backgroundColor:Color.fromARGB(255, 133, 238, 159),
+                        minimumSize: Size(double.infinity, 50), // Botón de ancho completo
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
