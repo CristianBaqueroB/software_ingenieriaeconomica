@@ -10,6 +10,7 @@ import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/pagar_c
 import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/Pagarcuotas.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/PresSimple/PrestamoInteresSim.dart';
 import 'package:software_ingenieriaeconomica/Users/prestamouser/home/History/historial_prestamos.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/home/PagepagarDeuda/PagarCuotasPage.dart';
 import 'package:software_ingenieriaeconomica/admin/solicitudincompuesto.dart';
 
 class SolicitudPrestamo extends StatefulWidget {
@@ -18,7 +19,7 @@ class SolicitudPrestamo extends StatefulWidget {
 }
 
 class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
-  List<Pagcuota> prestamos = []; // Asegúrate de inicializar la lista de préstamos
+  List<PagcuotaSimple> prestamos = []; // Asegúrate de inicializar la lista de préstamos
 
   @override
   void initState() {
@@ -32,7 +33,7 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
       final snapshot = await FirebaseFirestore.instance.collection('solicitudes_prestamo').get();
       setState(() {
         // Convertir los documentos a objetos Pagcuota
-        prestamos = snapshot.docs.map((doc) => Pagcuota.fromDocument(doc.data() as Map<String, dynamic>, doc.id)).toList();
+        prestamos = snapshot.docs.map((doc) => PagcuotaSimple.fromDocument(doc.data() as Map<String, dynamic>, doc.id)).toList();
       });
     } catch (e) {
       // Manejar el error, por ejemplo, mostrando un mensaje en la consola
@@ -71,7 +72,7 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
                     if (prestamos.isNotEmpty) {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => PagarCuotaPrestamo(prestamo: prestamos[0])),
+                        MaterialPageRoute(builder: (context) => PagarCuotasPage()),
                       );
                     }
                   },
@@ -91,18 +92,6 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
                   context,
                   MaterialPageRoute(builder: (context) => SimpleInterestPage()),
                 );
-              },
-            ),
-            SizedBox(height: 10), // Espacio entre botones
-            _OptionButton(
-              icon: Icons.monetization_on,
-              label: 'Interés Compuesto',
-              onPressed: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PrestamoCompuestoPage()),
-                );
-              // Navegar a la pantalla de interés compuesto PrestamoCompuestotPage
               },
             ),
             

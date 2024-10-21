@@ -38,16 +38,11 @@ class LoginPageState extends State<LoginPage> {
 void _loadCachedData() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? cachedCedula = prefs.getString('cedula');
-  String? cachedPassword = prefs.getString('password');
 
   print('Cédula en caché: $cachedCedula');
-  print('Contraseña en caché: $cachedPassword');
 
   if (cachedCedula != null) {
     _cedulaController.text = cachedCedula;
-  }
-  if (cachedPassword != null) {
-    _passwordController.text = cachedPassword;
   }
 }
 
@@ -217,7 +212,7 @@ Future<void> _handleLoginSuccess(String cedula, String? rol) async {
                     SizedBox(height: 30),
                     // Campo de la contraseña
                     TextField(
-                      //controller: _passwordController,
+                      controller: _passwordController,
                       decoration: InputDecoration(
                         hintText: "Ingrese su contraseña",
                         labelText: "Contraseña",

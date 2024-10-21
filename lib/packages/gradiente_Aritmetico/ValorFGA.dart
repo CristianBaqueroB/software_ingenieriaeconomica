@@ -5,54 +5,67 @@ class FutureValueArithmeticGradientPage extends StatefulWidget {
   const FutureValueArithmeticGradientPage({super.key});
 
   @override
-  FutureValueArithmeticGradientPageState createState() => FutureValueArithmeticGradientPageState();
+  FutureValueArithmeticGradientPageState createState() =>
+      FutureValueArithmeticGradientPageState();
 }
 
-class FutureValueArithmeticGradientPageState extends State<FutureValueArithmeticGradientPage> {
+class FutureValueArithmeticGradientPageState
+    extends State<FutureValueArithmeticGradientPage> {
   final _initialPaymentController = TextEditingController();
   final _gradientController = TextEditingController();
   final _timeController = TextEditingController();
   final _interestRateController = TextEditingController();
-  String _interestRateUnit = "Anual"; // Unidad de tasa de interés por defecto: Anual
+  String _interestRateUnit =
+      "Anual"; // Unidad de tasa de interés por defecto: Anual
   String _quotaUnit = "Meses"; // Unidad de número de cuotas por defecto: Meses
   double? _calculatedFutureValue;
-void _calculateFutureValue() {
-  final initialPayment = double.tryParse(_initialPaymentController.text);
-  final gradient = double.tryParse(_gradientController.text);
-  final time = double.tryParse(_timeController.text);
-  final interestRate = double.tryParse(_interestRateController.text);
 
-  if (initialPayment != null && gradient != null && time != null && interestRate != null) {
-    double totalPeriods;
-    double interestRateDecimal;
+  void _calculateFutureValue() {
+    final initialPayment = double.tryParse(_initialPaymentController.text);
+    final gradient = double.tryParse(_gradientController.text);
+    final time = double.tryParse(_timeController.text);
+    final interestRate = double.tryParse(_interestRateController.text);
 
-    // Convertir el tiempo a períodos de capitalización
-    if (_quotaUnit == "Años") {
-      totalPeriods = time * 12; // Convertir años a meses
-    } else {
-      totalPeriods = time; // Si ya está en meses
+    if (initialPayment != null &&
+        gradient != null &&
+        time != null &&
+        interestRate != null) {
+      double totalPeriods;
+      double interestRateDecimal;
+
+      // Convertir el tiempo a períodos de capitalización
+      if (_quotaUnit == "Años") {
+        totalPeriods = time; // Convertir años a meses
+      } else {
+        totalPeriods = time * 12; // Si ya está en meses
+      }
+
+      // Convertir la tasa de interés a decimal
+      if (_interestRateUnit == "Mensual") {
+        interestRateDecimal =
+            interestRate / 100; // Tasa mensual ya está en formato decimal
+      } else {
+        // Si la tasa es anual, convertirla a mensual
+        interestRateDecimal = (interestRate / 100);
+      }
+
+      // Calcular el factor de acumulación
+      final double factorAccumulation =
+          (pow(1 + interestRateDecimal, totalPeriods) - 1) /
+              interestRateDecimal;
+
+      // Calcular el valor futuro usando la fórmula corregida
+      final double futureValue = (initialPayment * factorAccumulation) +
+          (gradient *
+              (((pow(1 + interestRateDecimal, totalPeriods) - 1) /
+                      pow(interestRateDecimal, 2)) -
+                  (totalPeriods / interestRateDecimal)));
+
+      setState(() {
+        _calculatedFutureValue = futureValue;
+      });
     }
-
-    // Convertir la tasa de interés a decimal
-    if (_interestRateUnit == "Mensual") {
-      interestRateDecimal = interestRate / 100; // Tasa mensual ya está en formato decimal
-    } else {
-      // Si la tasa es anual, convertirla a mensual
-      interestRateDecimal = (interestRate / 100) / 12;
-    }
-
-    // Calcular el factor de acumulación
-    final double factorAccumulation = (pow(1 + interestRateDecimal, totalPeriods) - 1) / interestRateDecimal;
-
-    // Calcular el valor futuro usando la fórmula proporcionada
-    final double futureValue = (initialPayment * factorAccumulation) + (gradient/interestRateDecimal * (factorAccumulation - totalPeriods));
-
-    setState(() {
-      _calculatedFutureValue = futureValue;
-    });
   }
-}
-
 
   void _clearFields() {
     setState(() {
@@ -60,7 +73,6 @@ void _calculateFutureValue() {
       _gradientController.clear();
       _timeController.clear();
       _interestRateController.clear();
-     
       _interestRateUnit = "Anual"; // Restablecer la unidad por defecto
       _quotaUnit = "Meses"; // Restablecer la unidad por defecto
       _calculatedFutureValue = null; // Limpiar el resultado
@@ -115,8 +127,6 @@ void _calculateFutureValue() {
               ),
             ),
             SizedBox(height: 10),
-            
-            SizedBox(height: 10),
             Row(
               children: [
                 Text(
@@ -129,7 +139,8 @@ void _calculateFutureValue() {
                 SizedBox(width: 10),
                 DropdownButton<String>(
                   value: _interestRateUnit,
-                  items: <String>["Anual", "Mensual"].map<DropdownMenuItem<String>>((String value) {
+                  items: <String>["Anual", "Mensual"]
+                      .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -156,7 +167,8 @@ void _calculateFutureValue() {
                 SizedBox(width: 10),
                 DropdownButton<String>(
                   value: _quotaUnit,
-                  items: <String>["Meses", "Años"].map<DropdownMenuItem<String>>((String value) {
+                  items: <String>["Meses", "Años"]
+                      .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -179,7 +191,8 @@ void _calculateFutureValue() {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
                     textStyle: TextStyle(
                       fontSize: 18,
                       fontFamily: 'Roboto',
@@ -191,8 +204,10 @@ void _calculateFutureValue() {
                   onPressed: _clearFields,
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Colors.red, // Cambia el color del botón de limpiar
-                    padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+                    backgroundColor:
+                        Colors.red, // Cambia el color del botón de limpiar
+                    padding:
+                        EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
                     textStyle: TextStyle(
                       fontSize: 18,
                       fontFamily: 'Roboto',
@@ -219,3 +234,5 @@ void _calculateFutureValue() {
     );
   }
 }
+
+

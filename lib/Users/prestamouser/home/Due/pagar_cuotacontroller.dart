@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Pagcuota {
+class PagcuotaSimple {
   final String id;
   final String cedula;
   final String estado;
@@ -18,7 +18,7 @@ class Pagcuota {
   // Nueva propiedad que indica si el pago está atrasado
   bool get atrasado => DateTime.now().isAfter(fechaLimite);
 
-  Pagcuota({
+  PagcuotaSimple({
     required this.id,
     required this.cedula,
     required this.estado,
@@ -34,8 +34,8 @@ class Pagcuota {
     required this.tipoprestamo,
   });
 
-  factory Pagcuota.fromDocument(Map<String, dynamic> data, String id) {
-    return Pagcuota(
+  factory PagcuotaSimple.fromDocument(Map<String, dynamic> data, String id) {
+    return PagcuotaSimple(
       id: id,
       estado: data['estado'] ?? 'Sin estado',
       fechaSolicitud: (data['fecha_solicitud']?.toDate() ?? DateTime.now()),
@@ -52,7 +52,7 @@ class Pagcuota {
     );
   }
 
-  // Método para convertir Pagcuota a un Map
+  // Método para convertir PagcuotaSimple a un Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -71,13 +71,13 @@ class Pagcuota {
     };
   }
 
-  static Future<List<Pagcuota>> cargarDocumentos() async {
-    List<Pagcuota> prestamos = [];
+  static Future<List<PagcuotaSimple>> cargarDocumentos() async {
+    List<PagcuotaSimple> prestamos = [];
 
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('solicitudes_prestamo').get();
       for (var doc in snapshot.docs) {
-        prestamos.add(Pagcuota.fromDocument(doc.data() as Map<String, dynamic>, doc.id));
+        prestamos.add(PagcuotaSimple.fromDocument(doc.data() as Map<String, dynamic>, doc.id));
       }
     } catch (e) {
       // Manejar errores si la carga falla

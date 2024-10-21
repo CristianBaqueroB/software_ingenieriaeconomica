@@ -112,7 +112,10 @@ Future<void> requestLoan({
   // Calcular la fecha límite en base a la duración del préstamo
   dueDate = _calculateDueDate(loanTerm ~/ 12, loanTerm % 12, 0);
 
-  // Guardar la solicitud en Firestore con el total a pagar, intereses y fecha límite
+  // Calcular monto por cuota
+  double montoPorCuota = totalPayment / loanTerm;
+
+  // Guardar la solicitud en Firestore con el total a pagar, intereses, monto por cuota y fecha límite
   await FirebaseFirestore.instance.collection('solicitudes_prestamo').add({
     'cedula': cedula,
     'estado': status,
@@ -125,6 +128,7 @@ Future<void> requestLoan({
     'tipo_prestamo': 'Amortización Alemana', // Cambiar según el tipo de préstamo
     'tipo_tasa': rateType == 'anual' ? 'Anual' : 'Mensual',
     'total_pago': totalPayment, // Total a pagar
+    'monto_por_cuota': montoPorCuota, // Monto por cuota calculado
   });
 
   // Guardar la tabla de amortización en Firestore
@@ -134,5 +138,4 @@ Future<void> requestLoan({
     'tabla_amortizacion': amortizationTable,
   });
 }
-
 }
