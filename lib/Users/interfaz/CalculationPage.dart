@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:software_ingenieriaeconomica/packages/Bonos/bonos.dart';
+import 'package:software_ingenieriaeconomica/packages/EVAI/evai.dart';
 import 'package:software_ingenieriaeconomica/packages/Gradiente_Geometrico/OpCalculuoGG.dart';
+import 'package:software_ingenieriaeconomica/packages/Inflacion/inflacioninfo.dart';
+import 'package:software_ingenieriaeconomica/packages/TIR/calculartir.dart';
 import 'package:software_ingenieriaeconomica/packages/UVR/pagecalculouvr.dart';
 import 'package:software_ingenieriaeconomica/packages/armotization/armotizacionpage.dart';
 import 'package:software_ingenieriaeconomica/packages/gradiente_Aritmetico/OPCalculoGA.dart';
@@ -15,7 +19,8 @@ class CalculationPage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Cálculos"),
       ),
-      body: SingleChildScrollView( // Envuelve el contenido en un SingleChildScrollView
+      body: SingleChildScrollView(
+        // Envuelve el contenido en un SingleChildScrollView
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -31,15 +36,36 @@ class CalculationPage extends StatelessWidget {
             SizedBox(height: 20),
             _calculationCard(context, "Interés Simple", InterestSimplePage()),
             SizedBox(height: 20),
-            _calculationCard(context, "Interés Compuesto", InterestCompuestoPage()),
+            _calculationCard(
+                context, "Interés Compuesto", InterestCompuestoPage()),
             SizedBox(height: 20),
-            _calculationCard(context, "Gradiente Aritmético", GradienteAritmeticoPage()),
+            _calculationCard(
+                context, "Gradiente Aritmético", GradienteAritmeticoPage()),
             SizedBox(height: 20),
-            _calculationCard(context, "Gradiente Geométrico", GradienteGeometricoPage()),
+            _calculationCard(
+                context, "Gradiente Geométrico", GradienteGeometricoPage()),
             SizedBox(height: 20),
-            _calculationCard(context, "Armotización",  AmortizacionCalculationPage()), 
+            _calculationCard(
+                context, "Amortización", AmortizacionCalculationPage()),
             SizedBox(height: 20),
-            _calculationCard(context, "Unidad de Valor Real", UvrCalculationPage()), 
+            _calculationCard(
+                context, "Unidad de Valor Real", UvrCalculationPage()),
+            SizedBox(height: 20),
+            _calculationCard(context, "Tasa de Interes de Retorno",
+                InterestRateReturnPage()),
+            SizedBox(
+              height: 20,
+            ),
+            _calculationCard(context, "Evalucion de Alternativas de Inversion",
+                InvestmentEvaluationPage()),
+            SizedBox(
+              height: 20,
+            ),
+            _calculationCard(context, "Bonos", BondPage()),
+            SizedBox(
+              height: 20,
+            ),
+            _calculationCard(context, "Inflacion", InflationPage()),
           ],
         ),
       ),
@@ -76,5 +102,3 @@ class CalculationPage extends StatelessWidget {
     );
   }
 }
-
-

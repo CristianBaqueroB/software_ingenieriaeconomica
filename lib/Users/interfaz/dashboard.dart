@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:software_ingenieriaeconomica/packages/Bonos/datosBonos.dart';
+import 'package:software_ingenieriaeconomica/packages/EVAI/datosEvai.dart';
 import 'package:software_ingenieriaeconomica/packages/Gradiente_Geometrico/GradienteG.dart';
+import 'package:software_ingenieriaeconomica/packages/Inflacion/datosInflacion.dart';
+import 'package:software_ingenieriaeconomica/packages/TIR/datosTir.dart';
 import 'package:software_ingenieriaeconomica/packages/UVR/pgprinuvr.dart'; // Asegúrate de importar UvrInfoPage
+import 'package:software_ingenieriaeconomica/packages/armotization/datosAmortizacion.dart';
 import 'package:software_ingenieriaeconomica/packages/gradiente_Aritmetico/gradiente_aritmetico.dart';
 import 'package:software_ingenieriaeconomica/packages/interesSimple/interest_simple.dart';
 import 'package:software_ingenieriaeconomica/packages/interesCompuesto/interes_compuesto.dart';
@@ -41,22 +46,41 @@ class DashboardPage extends StatelessWidget {
               child: const GeometricGradientPage(),
             ),
           ),
-         _CardItem(
+          _CardItem(
             child: SizedBox(
               height: 70,
-              child: const GeometricGradientPage(),
+              child: const datosAmortizacionPage(),
             ),
           ),
-           _CardItem(
+          _CardItem(
             child: SizedBox(
               height: 70,
-              child: const GeometricGradientPage(),
+              child: const datosTirPage(),
             ),
           ),
           _CardItem(
             child: SizedBox(
               height: 70,
               child: const UvrInfoPage(),
+            ),
+          ),
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const datosEvaiPage(),
+            ),
+          ),
+                    _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const datosBonosPage(),
+            ),
+          ),
+          
+          _CardItem(
+            child: SizedBox(
+              height: 70,
+              child: const datosInflacionPage(),
             ),
           ),
           
@@ -83,5 +107,3 @@ class _CardItem extends StatelessWidget {
     );
   }
 }
-
-
