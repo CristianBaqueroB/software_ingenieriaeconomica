@@ -100,7 +100,7 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               onPressed: () {
                  Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => PrestamoCompuestotPage()),
+                  MaterialPageRoute(builder: (context) => PrestamoCompuestoPage()),
                 );
               // Navegar a la pantalla de interés compuesto PrestamoCompuestotPage
               },
