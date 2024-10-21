@@ -21,8 +21,8 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _navigationItems = [
     Icon(Icons.dashboard),
-    Icon(Icons.home),
     Icon(Icons.account_balance),
+     Icon(Icons.home),
     Icon(Icons.calculate),
     Icon(Icons.request_page),
   ];
@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage> {
           });
         },
       ),
-      appBar: _selectedIndex == 1
+      appBar: _selectedIndex == 2
           ? AppBar(
               title: Text('TuBank'),
               backgroundColor: Colors.green,
@@ -80,9 +80,9 @@ class _HomePageState extends State<HomePage> {
       case 0:
         return DashboardPage();
       case 1:
-        return PaginaBienvenida(); // Usa la nueva página de bienvenida
-      case 2:
         return SaldoPrestamoWidget();
+      case 2:
+        return  PaginaBienvenida();
       case 3:
         return CalculationPage();
       case 4:

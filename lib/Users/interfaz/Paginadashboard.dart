@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:software_ingenieriaeconomica/Users/interfaz/DetalleTransferencia.dart';
 import 'package:software_ingenieriaeconomica/Users/interfaz/RecargarSaldo.dart';
 import 'package:software_ingenieriaeconomica/Users/interfaz/transferencia_dinero.dart';
 
@@ -53,7 +54,7 @@ class _SaldoPrestamoWidgetState extends State<SaldoPrestamoWidget> {
           if (!isLoading) ...[
              SizedBox(height: 50),
             Card(
-              color: Colors.white.withOpacity(0.8), // Color blanco con opacidad
+              color: const Color.fromARGB(64, 77, 122, 105).withOpacity(0.8), // Color blanco con opacidad
               elevation: 5,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15), // Bordes redondeados
@@ -65,12 +66,12 @@ class _SaldoPrestamoWidgetState extends State<SaldoPrestamoWidget> {
                   children: [
                     Text(
                       'Saldo: \$${saldo.toStringAsFixed(2)}',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white ),
                     ),
                     SizedBox(height: 10),
                     Text(
                       'Saldo de Préstamo: \$${montoPrestamo.toStringAsFixed(2)}',
-                      style: TextStyle(fontSize: 20),
+                      style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ],
                 ),
@@ -131,7 +132,11 @@ class _SaldoPrestamoWidgetState extends State<SaldoPrestamoWidget> {
                 SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-                    // Lógica para ver detalle de movimientos
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Detalletransferencia ()),
+                    );
+                    // Lógica para ver detalle de movimientos TransferenciaDineroPage 
                     print('Ver detalle de movimientos');
                   },
                   child: Row(

@@ -2,10 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Asegúrate de importar Firestore
-import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/pagar_cuotacontroller.dart';
-import 'package:software_ingenieriaeconomica/Users/prestamouser/Pagarcuotas.dart';
-import 'package:software_ingenieriaeconomica/Users/prestamouser/PrestamoInteresSim.dart';
-import 'package:software_ingenieriaeconomica/Users/prestamouser/historial_prestamos.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmAlemana/armotizacionAlemana.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmAmericana/ArmotizacionAmericana.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmFrancesa/ArmotizacionFrancesa.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/GradientGeo/GradieSoli.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/pagar_cuotacontroller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/Pagarcuotas.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/PresSimple/PrestamoInteresSim.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/home/History/historial_prestamos.dart';
 import 'package:software_ingenieriaeconomica/admin/solicitudincompuesto.dart';
 
 class SolicitudPrestamo extends StatefulWidget {
@@ -114,7 +118,11 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               icon: Icons.trending_flat,
               label: 'Gradiente Geométrico',
               onPressed: () {
-                // Navegar a la pantalla de gradiente geométrico
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>  GeometricGradientLoanRequest()),
+                );
+                // Navegar a la pantalla de gradiente geométrico GeometricGradientLoanRequest
               },
             ),
             SizedBox(height: 20), // Espacio entre secciones
@@ -129,7 +137,10 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               icon: Icons.equalizer,
               label: 'Alemana',
               onPressed: () {
-                // Navegar a la pantalla de amortización alemana
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => GermanSolicitud()),
+                );// Navegar a la pantalla de amortización alemana
               },
             ),
             SizedBox(height: 10), // Espacio entre botones
@@ -137,7 +148,10 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               icon: Icons.balance,
               label: 'Francesa',
               onPressed: () {
-                // Navegar a la pantalla de amortización francesa
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FrenchAmortizationp ()),
+                );// Navegar a la pantalla de amortización francesa LoanRequestPage ()
               },
             ),
             SizedBox(height: 10), // Espacio entre botones
@@ -145,7 +159,11 @@ class _SolicitudPrestamoState extends State<SolicitudPrestamo> {
               icon: Icons.money_off,
               label: 'Americana',
               onPressed: () {
-                // Navegar a la pantalla de amortización americana
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AmericanSolicitud ()),
+                );// Navegar a la pantalla de amortización francesa LoanRequestPage ()
+                // Navegar a la pantalla de amortización americana  AmericanSolicitud
               },
             ),
           ],

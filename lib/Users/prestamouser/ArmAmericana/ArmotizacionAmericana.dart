@@ -1,92 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/ArmAmericana/ArmotizacionAmeController.dart';
 
-
-class AmericanAmortization extends StatefulWidget {
-  const AmericanAmortization({super.key});
-
+class AmericanSolicitud extends StatefulWidget {
+  const AmericanSolicitud({super.key});
 
   @override
-  _AmericanAmortizationState createState() => _AmericanAmortizationState();
+  _AmericanSolicitudState createState() => _AmericanSolicitudState();
 }
 
-
-class _AmericanAmortizationState extends State<AmericanAmortization> {
+class _AmericanSolicitudState extends State<AmericanSolicitud> {
   final TextEditingController _loanAmountController = TextEditingController();
   final TextEditingController _annualRateController = TextEditingController();
   final TextEditingController _yearsController = TextEditingController();
   final TextEditingController _monthsController = TextEditingController();
   final TextEditingController _daysController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
 
-  double _totalMonths = 0; // Tiempo total en meses
-  double _fixedInterestPayment = 0.0; // Pago fijo de intereses
-  double _finalPayment = 0.0; // Pago final que incluye el capital
-  double _totalInterestPaid = 0.0; // Total de intereses pagados
-  List<Map<String, dynamic>> _interestPayments = [];
+  late AmericanLoanController _controller; // Controlador para manejar la lógica
 
-
-  // Función para convertir el tiempo a meses
-  void _convertTimeToMonths() {
-    setState(() {
-      int years = int.tryParse(_yearsController.text) ?? 0;
-      int months = int.tryParse(_monthsController.text) ?? 0;
-      int days = int.tryParse(_daysController.text) ?? 0;
-
-
-      // Convertir años a meses y días a meses
-      _totalMonths = (years) + (months / 12) + (days / 365);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _controller = AmericanLoanController(
+      loanAmountController: _loanAmountController,
+      annualRateController: _annualRateController,
+      yearsController: _yearsController,
+      monthsController: _monthsController,
+      daysController: _daysController,
+      idController: _idController,
+    );
   }
 
+  void _calculateAmortization() async {
+    // Validar que todos los campos estén llenos
+    if (_idController.text.isEmpty ||
+        _loanAmountController.text.isEmpty ||
+        _annualRateController.text.isEmpty ||
+        _yearsController.text.isEmpty ||
+        _monthsController.text.isEmpty ||
+        _daysController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Por favor, complete todos los campos.'),
+      ));
+      return; // Salir de la función si algún campo está vacío
+    }
 
-  // Función para convertir la tasa de interés dependiendo del tipo seleccionado
-  double _getInterestRate() {
-    double rate = double.tryParse(_annualRateController.text) ?? 0.0;
-    // Aquí asumimos que la tasa es anual
-    return rate / 100; // Mantener tasa anual
+    try {
+      await _controller.calculateAmortization();
+      setState(() {
+        // Actualiza la interfaz con los nuevos datos
+      });
+    } catch (e) {
+      // Manejar errores, mostrar mensaje al usuario
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error al calcular: $e'),
+      ));
+    }
   }
-
-
-  // Función para calcular la amortización americana
-  void _calculateAmortization() {
-    setState(() {
-      double loanAmount = double.tryParse(_loanAmountController.text) ?? 0.0;
-      double annualRate = _getInterestRate();
-
-
-      // Convertir tiempo a meses
-      _convertTimeToMonths();
-
-
-      if (_totalMonths > 0 && loanAmount > 0 && annualRate > 0) {
-        // Limpiar resultados anteriores
-        _interestPayments.clear();
-        _totalInterestPaid = 0.0; // Reiniciar el total de intereses
-
-
-        // Calcular los pagos periódicos de intereses
-        _fixedInterestPayment = loanAmount * annualRate; // Intereses mensuales
-
-
-        // Calcular el pago final del capital
-        _finalPayment = loanAmount;
-
-
-        // Generar pagos individuales de intereses por cada mes
-        for (int month = 1; month <= _totalMonths; month++) {
-          _interestPayments.add({
-            'month': month,
-            'interest': _fixedInterestPayment,
-            'isFinal': month == _totalMonths,
-          });
-
-
-          // Sumar al total de intereses pagados
-          _totalInterestPaid += _fixedInterestPayment;
-        }
-      }
-    });
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +74,15 @@ class _AmericanAmortizationState extends State<AmericanAmortization> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            
+            TextField(
+              controller: _idController,
+              decoration: const InputDecoration(
+                labelText: 'Cédula',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 10),
             TextField(
               controller: _loanAmountController,
               decoration: const InputDecoration(
@@ -162,16 +140,16 @@ class _AmericanAmortizationState extends State<AmericanAmortization> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _calculateAmortization,
-              child: const Text('Calcular Amortización'),
+              child: const Text('Solicitar Préstamo'), // Cambio de texto del botón
             ),
             const SizedBox(height: 20),
-            if (_interestPayments.isNotEmpty)
+            if (_controller.interestPayments.isNotEmpty)
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: _interestPayments.length,
+                itemCount: _controller.interestPayments.length,
                 itemBuilder: (context, index) {
-                  final payment = _interestPayments[index];
+                  final payment = _controller.interestPayments[index];
                   return Card(
                     elevation: 8.0,
                     margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -181,7 +159,7 @@ class _AmericanAmortizationState extends State<AmericanAmortization> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Mes ${payment['month']}',
+                            'Año ${payment['month']}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -193,8 +171,8 @@ class _AmericanAmortizationState extends State<AmericanAmortization> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Pago Capital: $_finalPayment USD'),
-                                Text('Total a Pagar: ${(_totalInterestPaid + _finalPayment).toStringAsFixed(2)} USD'),
+                                Text('Pago Capital: ${_controller.finalPayment.toStringAsFixed(2)} USD'),
+                                Text('Total a Pagar: ${(_controller.totalInterestPaid + _controller.finalPayment).toStringAsFixed(2)} USD'),
                               ],
                             ),
                         ],
@@ -209,8 +187,3 @@ class _AmericanAmortizationState extends State<AmericanAmortization> {
     );
   }
 }
-
-
-
-
-

@@ -12,11 +12,10 @@ class Prestamo {
   final String tipoTasa;
   final double totalPago;
   final String tipoprestamo;
-
   // Nueva propiedad que indica si el pago está atrasado
   bool get atrasado => DateTime.now().isAfter(fechaLimite);
 
-  Prestamo({
+   Prestamo({
     required this.id,
     required this.cedula,
     required this.estado,
@@ -32,7 +31,7 @@ class Prestamo {
     required this.tipoprestamo,
   });
 
-  factory Prestamo.fromDocument(Map<String, dynamic> data, String id) {
+factory Prestamo.fromDocument(Map<String, dynamic> data, String id) {
     return Prestamo(
       id: id,
       estado: data['estado'] ?? 'Sin estado',
@@ -47,6 +46,7 @@ class Prestamo {
       tasa: _toDouble(data['tasa']),
       tipoTasa: data['tipo_tasa'] ?? 'Desconocido',
       tipoprestamo: data['tipo_prestamo'] ?? 'Desconocido',
+
     );
   }
 

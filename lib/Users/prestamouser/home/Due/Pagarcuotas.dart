@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/pagar_cuotacontroller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/home/Due/pagar_cuotacontroller.dart';
 
 class PagarCuotaPrestamo extends StatefulWidget {
   final Pagcuota prestamo;
@@ -16,6 +16,7 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
   List<Pagcuota> _prestamos = [];
   Pagcuota? _prestamoSeleccionado;
   double _cuotasSeleccionadas = 1;
+  double _montoAPagar = 0;
   bool _isLoading = true;
 
   @override
@@ -25,11 +26,21 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
   }
 
   Future<void> _cargarPrestamosAceptados() async {
-    List<Pagcuota> prestamosAceptados = await obtenerPrestamosAceptados();
-    setState(() {
-      _prestamos = prestamosAceptados;
-      _isLoading = false;
-    });
+    try {
+      List<Pagcuota> prestamosAceptados = await obtenerPrestamosAceptados();
+      setState(() {
+        _prestamos = prestamosAceptados;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error al cargar los préstamos aceptados: $e'),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   @override
@@ -60,6 +71,7 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
                           setState(() {
                             _prestamoSeleccionado = nuevoPrestamo;
                             _cuotasSeleccionadas = 1; // Reiniciar el slider al cambiar de préstamo
+                            _montoAPagar = nuevoPrestamo?.totalPago ?? 0;
                           });
                         },
                         items: _prestamos.map((prestamo) {
@@ -83,39 +95,47 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
                         ),
                         SizedBox(height: 20),
 
-                        // Texto que indica la selección de cuotas
+                        // Opciones de pago
                         Text(
-                          'Selecciona cuántas cuotas deseas pagar:',
+                          'Selecciona qué deseas pagar:',
                           style: TextStyle(fontSize: 16),
                         ),
-                        SizedBox(height: 10),
-
-                        // Slider para seleccionar la cantidad de cuotas a pagar
-                        Slider(
-                          value: _cuotasSeleccionadas,
-                          min: 1,
-                          max: _prestamoSeleccionado!.numCuotas.toDouble(),
-                          divisions: _prestamoSeleccionado!.numCuotas,
-                          label: '${_cuotasSeleccionadas.toInt()}',
-                          onChanged: (double value) {
-                            setState(() {
-                              _cuotasSeleccionadas = value;
-                            });
-                          },
+                        ListTile(
+                          title: Text('Pagar Saldo Pendiente'),
+                          leading: Radio<double>(
+                            value: _prestamoSeleccionado!.totalPago,
+                            groupValue: _montoAPagar,
+                            onChanged: (double? value) {
+                              setState(() {
+                                _montoAPagar = value!;
+                              });
+                            },
+                          ),
                         ),
-                        SizedBox(height: 10),
+                        ListTile(
+                          title: Text('Pagar Monto por Cuota'),
+                          leading: Radio<double>(
+                            value: _prestamoSeleccionado!.montoPorCuota,
+                            groupValue: _montoAPagar,
+                            onChanged: (double? value) {
+                              setState(() {
+                                _montoAPagar = value!;
+                              });
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 20),
 
-                        // Texto que muestra el monto total a pagar según las cuotas seleccionadas
+                        // Mostrar el monto a pagar
                         Text(
-                          'Monto total a pagar por ${_cuotasSeleccionadas.toInt()} cuota(s): '
-                          '\$${formatNumber(_cuotasSeleccionadas * _prestamoSeleccionado!.montoPorCuota)}',
+                          'Monto total a pagar: \$${formatNumber(_montoAPagar)}',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 20),
 
                         // Botón para confirmar el pago
                         ElevatedButton.icon(
-                          onPressed: _confirmarPagoCuotas,
+                          onPressed: _confirmarPago,
                           icon: Icon(Icons.payment),
                           label: Text('Confirmar Pago'),
                           style: ElevatedButton.styleFrom(
@@ -132,7 +152,7 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
     );
   }
 
-  void _confirmarPagoCuotas() {
+  void _confirmarPago() {
     if (_prestamoSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Por favor, selecciona un préstamo.'),
@@ -141,9 +161,6 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
       return;
     }
 
-    int cuotasSeleccionadas = _cuotasSeleccionadas.toInt();
-    double totalPagar = cuotasSeleccionadas * _prestamoSeleccionado!.montoPorCuota;
-
     // Diálogo de confirmación antes de procesar el pago
     showDialog(
       context: context,
@@ -151,7 +168,7 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
         return AlertDialog(
           title: Text('Confirmar Pago'),
           content: Text(
-              '¿Estás seguro de realizar el pago de $cuotasSeleccionadas cuota(s) por un total de \$${formatNumber(totalPagar)}?'),
+              '¿Estás seguro de realizar el pago de \$${formatNumber(_montoAPagar)}?'),
           actions: [
             TextButton(
               child: Text('Cancelar'),
@@ -161,7 +178,7 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
               child: Text('Confirmar'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _procesarPago(cuotasSeleccionadas, totalPagar);
+                _procesarPago();
               },
             ),
           ],
@@ -170,9 +187,8 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
     );
   }
 
-  void _procesarPago(int cuotasSeleccionadas, double totalPagar) {
-    double nuevoTotalPago = _prestamoSeleccionado!.totalPago - totalPagar;
-    int nuevasCuotas = _prestamoSeleccionado!.numCuotas - cuotasSeleccionadas;
+  void _procesarPago() {
+    double nuevoTotalPago = _prestamoSeleccionado!.totalPago - _montoAPagar;
     String nuevoEstado = (nuevoTotalPago <= 0) ? 'Pagado' : _prestamoSeleccionado!.estado;
 
     try {
@@ -181,17 +197,17 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
           .doc(_prestamoSeleccionado!.id)
           .update({
         'total_pago': nuevoTotalPago,
-        'num_cuotas': nuevasCuotas,
         'estado': nuevoEstado,
       }).then((_) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-              'Pago de $cuotasSeleccionadas cuota(s) realizado con éxito. Nueva deuda: \$${formatNumber(nuevoTotalPago)}'),
+              'Pago de \$${formatNumber(_montoAPagar)} realizado con éxito. Nueva deuda: \$${formatNumber(nuevoTotalPago)}'),
         ));
 
         _cargarPrestamosAceptados();
         setState(() {
           _prestamoSeleccionado = null;
+          _montoAPagar = 0;
         });
       });
     } catch (e) {
@@ -203,28 +219,32 @@ class _PagarCuotaPrestamoState extends State<PagarCuotaPrestamo> {
   }
 
   Future<List<Pagcuota>> obtenerPrestamosAceptados() async {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('solicitudes_prestamo')
-        .where('estado', isEqualTo: 'aceptado')
-        .get();
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('solicitudes_prestamo')
+          .where('estado', isEqualTo: 'aceptado')
+          .get();
 
-    return snapshot.docs.map((doc) {
-      return Pagcuota(
-        id: doc.id,
-        cedula: doc['cedula'] ?? 'Sin cédula',
-        estado: doc['estado'],
-        fechaLimite: (doc['fecha_limite'] as Timestamp).toDate(),
-        fechaSolicitud: (doc['fecha_solicitud'] as Timestamp).toDate(),
-        interes: doc['interes'],
-        tasa: (doc['tasa']),
-        tipoTasa: doc['tipo_tasa'] ?? 'Desconocido',
-        tipoprestamo: doc['tipo_prestamo'] ?? 'Desconocido',
-        monto: doc['monto'],
-        montoPorCuota: doc['monto_por_cuota'],
-        numCuotas: doc['num_cuotas'],
-        totalPago: doc['total_pago'],
-      );
-    }).toList();
+      return snapshot.docs.map((doc) {
+        return Pagcuota(
+          id: doc.id,
+          cedula: doc['cedula'] ?? 'Sin cédula',
+          estado: doc['estado'],
+          fechaLimite: (doc['fecha_limite'] as Timestamp).toDate(),
+          fechaSolicitud: (doc['fecha_solicitud'] as Timestamp).toDate(),
+          interes: doc['interes'],
+          tasa: (doc['tasa']),
+          tipoTasa: doc['tipo_tasa'] ?? 'Desconocido',
+          tipoprestamo: doc['tipo_prestamo'] ?? 'Desconocido',
+          monto: doc['monto'],
+          montoPorCuota: doc['monto_por_cuota'],
+          totalPago: doc['total_pago'],
+          numCuotas: doc['num_cuotas']
+        );
+      }).toList();
+    } catch (e) {
+      throw Exception('Error al obtener préstamos aceptados: $e');
+    }
   }
 
   String formatNumber(double number) {

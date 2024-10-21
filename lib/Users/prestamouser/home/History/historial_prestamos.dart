@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/historial_controller.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/home/History/historial_controller.dart';
 
 class HistorialSolicitudesPrestamos extends StatelessWidget {
   @override
@@ -14,7 +14,9 @@ class HistorialSolicitudesPrestamos extends StatelessWidget {
         appBar: AppBar(
           title: Text('Mis Solicitudes de Préstamos'),
         ),
-        body: Center(child: Text('Por favor, inicie sesión para ver sus solicitudes.')),
+        body: Center(
+          child: Text('Por favor, inicie sesión para ver sus solicitudes.'),
+        ),
       );
     }
 
@@ -26,6 +28,7 @@ class HistorialSolicitudesPrestamos extends StatelessWidget {
             icon: Icon(Icons.refresh),
             onPressed: () {
               // Lógica para refrescar el historial, si es necesario
+              // Se puede implementar un método para refrescar la vista.
             },
           ),
         ],
@@ -71,20 +74,8 @@ class HistorialSolicitudesPrestamos extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final loan = loans[index];
 
-                  Color cardColor;
-                  switch (loan.estado.toLowerCase()) {
-                    case "pendiente":
-                      cardColor = Colors.amber[100]!;
-                      break;
-                    case "aceptado":
-                      cardColor = Colors.green[100]!;
-                      break;
-                    case "rechazado":
-                      cardColor = Colors.red[100]!;
-                      break;
-                    default:
-                      cardColor = Colors.white;
-                  }
+                  // Determina el color de la tarjeta según el estado del préstamo
+                  Color cardColor = _getCardColor(loan.estado);
 
                   final DateFormat formatter = DateFormat('dd/MM/yyyy');
                   String formattedSolicitud = formatter.format(loan.fechaSolicitud);
@@ -104,57 +95,14 @@ class HistorialSolicitudesPrestamos extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Tipo de Préstamo:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(loan.tipoprestamo),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Monto del Préstamo:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text('\$${formatNumber(loan.monto)}'),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Interés:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text('\$${formatNumber(loan.interes)}'),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Total a Pagar:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text('\$${formatNumber(loan.totalPago)}'),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Fecha de Solicitud:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(formattedSolicitud),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Fecha Límite:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(formattedLimite),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Estado:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(loan.estado),
-                              ],
-                            ),
-                            SizedBox(height: 10), // Espacio entre información y mensaje de estado
+                            _buildLoanDetailRow('Tipo de Préstamo:', loan.tipoprestamo),
+                            _buildLoanDetailRow('Monto del Préstamo:', '\$${formatNumber(loan.monto)}'),
+                            _buildLoanDetailRow('Interés:', '\$${formatNumber(loan.interes)}'),
+                            _buildLoanDetailRow('Total a Pagar:', '\$${formatNumber(loan.totalPago)}'),
+                            _buildLoanDetailRow('Fecha de Solicitud:', formattedSolicitud),
+                            _buildLoanDetailRow('Fecha Límite:', formattedLimite),
+                            _buildLoanDetailRow('Estado:', loan.estado),
+                            SizedBox(height: 10),
                             Text(
                               loan.atrasado ? 'El pago está atrasado.' : 'El pago está al día.',
                               style: TextStyle(
@@ -173,6 +121,31 @@ class HistorialSolicitudesPrestamos extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  // Método para obtener el color de la tarjeta según el estado
+  Color _getCardColor(String estado) {
+    switch (estado.toLowerCase()) {
+      case "pendiente":
+        return Colors.amber[100]!;
+      case "aceptado":
+        return Colors.green[100]!;
+      case "rechazado":
+        return Colors.red[100]!;
+      default:
+        return Colors.white;
+    }
+  }
+
+  // Método para construir filas de detalle del préstamo
+  Widget _buildLoanDetailRow(String title, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(value),
+      ],
     );
   }
 
@@ -196,5 +169,3 @@ class HistorialSolicitudesPrestamos extends StatelessWidget {
     return 'Sin cédula';
   }
 }
-
-

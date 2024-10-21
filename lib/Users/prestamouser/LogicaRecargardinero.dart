@@ -4,13 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 class RecargaService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const double montoMinimoRecarga = 10000.0; // Monto mínimo a recargar
 
   /// Obtiene la cédula del usuario actualmente logueado.
   Future<String?> obtenerCedulaUsuarioLogueado() async {
     User? usuario = _auth.currentUser;
     if (usuario != null) {
       DocumentSnapshot userDoc = await _firestore.collection('users').doc(usuario.uid).get();
-      Map<String, dynamic>? data = userDoc.data() as Map<String, dynamic>?;
+      Map<String, dynamic>? data = userDoc.data() as Map<String, dynamic>?;      
       return data?['cedula'];
     }
     return null;
@@ -25,7 +26,7 @@ class RecargaService {
 
       DocumentSnapshot recargasDoc = await _firestore.collection('recargas').doc(fechaHoy).get();
       if (recargasDoc.exists) {
-        Map<String, dynamic>? data = recargasDoc.data() as Map<String, dynamic>?;
+        Map<String, dynamic>? data = recargasDoc.data() as Map<String, dynamic>?;        
         return data?['totalRecargas']?.toDouble() ?? 0.0;
       }
     }
@@ -54,6 +55,10 @@ class RecargaService {
 
   /// Realiza una recarga de dinero para el usuario logueado.
   Future<void> realizarRecarga(String cedula, double monto) async {
+    if (monto < montoMinimoRecarga) {
+      throw Exception('El monto mínimo de recarga es \$${montoMinimoRecarga.toStringAsFixed(2)}.');
+    }
+
     final userDocRef = _firestore.collection('users').doc(_auth.currentUser?.uid);
     DocumentSnapshot userDoc = await userDocRef.get();
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Importa para usar FilteringTextInputFormatter
-import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/solicitudinsim_controller.dart'; // Asegúrate de importar Firestore
+import 'package:software_ingenieriaeconomica/Users/prestamouser/PresSimple/solicitudinsim_controller.dart'; // Asegúrate de importar Firestore
 
 class SimpleInterestPage extends StatefulWidget {
   const SimpleInterestPage({Key? key}) : super(key: key);

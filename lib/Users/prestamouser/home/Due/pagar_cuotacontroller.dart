@@ -87,6 +87,22 @@ class Pagcuota {
     return prestamos;
   }
 
+  // Método para obtener el saldo y préstamo del usuario
+  static Future<Map<String, double>> obtenerSaldoYPrestamo(String cedula) async {
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('users').doc(cedula).get();
+      if (snapshot.exists) {
+         final data = snapshot.data() as Map<String, dynamic>; 
+         double saldo = _toDouble(data['saldo']);
+         double prestamo = _toDouble(data['prestamo']);
+        return {'saldo': saldo, 'prestamo': prestamo};
+      }
+    } catch (e) {
+      print('Error al obtener saldo y préstamo: $e');
+    }
+    return {'saldo': 0.0, 'prestamo': 0.0}; // Valores por defecto en caso de error
+  }
+
   static double _toDouble(dynamic value) {
     if (value is double) {
       return value;

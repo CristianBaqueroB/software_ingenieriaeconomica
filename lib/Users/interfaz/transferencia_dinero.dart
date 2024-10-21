@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:software_ingenieriaeconomica/Users/prestamouser/controller/Transferenciaservivio.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TransferenciaDineroPage extends StatefulWidget {
   @override
@@ -9,13 +9,15 @@ class TransferenciaDineroPage extends StatefulWidget {
 
 class _TransferenciaDineroPageState extends State<TransferenciaDineroPage> {
   final _formKey = GlobalKey<FormState>();
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
+  final TransferenciaService _transferenciaService = TransferenciaService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String cedulaReceptor = '';
   double monto = 0.0;
-  String tipoSaldo = 'Saldo Normal'; // Opción por defecto
+  String tipoSaldo = 'Saldo Normal';
   String contrasena = '';
+  String? nombreReceptor;
+  String? apellidoReceptor;
 
   @override
   Widget build(BuildContext context) {
@@ -31,92 +33,37 @@ class _TransferenciaDineroPageState extends State<TransferenciaDineroPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Cédula del receptor',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  setState(() {
-                    cedulaReceptor = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese la cédula del receptor';
-                  }
-                  return null;
-                },
-              ),
+              _buildTextField('Cédula del receptor', (value) {
+                setState(() {
+                  cedulaReceptor = value;
+                });
+              }),
               SizedBox(height: 20),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Monto a transferir',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  setState(() {
-                    monto = double.tryParse(value) ?? 0.0;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty || double.tryParse(value) == null || double.tryParse(value)! <= 0) {
-                    return 'Por favor ingrese un monto válido';
-                  }
-                  return null;
-                },
-              ),
+              _buildTextField('Monto a transferir', (value) {
+                setState(() {
+                  monto = double.tryParse(value) ?? 0.0;
+                });
+              }, keyboardType: TextInputType.number),
               SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: tipoSaldo,
-                items: <String>['Saldo Normal', 'Saldo de Préstamo'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    tipoSaldo = value!;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Tipo de Saldo',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              _buildDropdown(),
               SizedBox(height: 20),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-                onChanged: (value) {
-                  setState(() {
-                    contrasena = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese su contraseña';
-                  }
-                  return null;
-                },
-              ),
+              _buildTextField('Contraseña', (value) {
+                setState(() {
+                  contrasena = value;
+                });
+              }, obscureText: true),
               SizedBox(height: 30),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      _transferirDinero();
+                      await _obtenerDetallesReceptor();
+                      _showConfirmationDialog(); // Mostrar el diálogo de confirmación
                     }
                   },
                   child: Text('Confirmar Transferencia'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Color del botón
+                    backgroundColor: Colors.green,
                     padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                     textStyle: TextStyle(fontSize: 18),
                   ),
@@ -129,63 +76,112 @@ class _TransferenciaDineroPageState extends State<TransferenciaDineroPage> {
     );
   }
 
-  Future<void> _transferirDinero() async {
-    User? currentUser = _auth.currentUser;
-
-    if (cedulaReceptor.isNotEmpty && monto > 0 && contrasena.isNotEmpty) {
-      // Verificar si el usuario tiene saldo suficiente
-      try {
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(currentUser!.uid).get();
-
-        // Obtener saldo actual del usuario
-        double saldoActual = userDoc['saldo']?.toDouble() ?? 0.0;
-
-        // Verificar si el usuario tiene suficiente saldo
-        if (saldoActual >= monto) {
-          // Obtener el documento del receptor
-          QuerySnapshot receptorSnapshot = await _firestore
-              .collection('users')
-              .where('cedula', isEqualTo: cedulaReceptor)
-              .get();
-
-          if (receptorSnapshot.docs.isNotEmpty) {
-            DocumentSnapshot receptorDoc = receptorSnapshot.docs.first;
-
-            // Actualizar el saldo del receptor
-            double saldoReceptorActual = receptorDoc['saldo']?.toDouble() ?? 0.0;
-            double nuevoSaldoReceptor = saldoReceptorActual + monto;
-
-            await _firestore.collection('users').doc(receptorDoc.id).update({
-              'saldo': nuevoSaldoReceptor,
-            });
-
-            // Deduct the amount from the current user's balance
-            await _firestore.collection('users').doc(currentUser.uid).update({
-              'saldo': saldoActual - monto,
-            });
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Transferencia exitosa a la cédula $cedulaReceptor')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Receptor no encontrado')),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Saldo insuficiente')),
-          );
+  TextFormField _buildTextField(String label, ValueChanged<String> onChanged, {bool obscureText = false, TextInputType keyboardType = TextInputType.text}) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor ingrese $label';
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error en la transferencia: $e')),
+        return null;
+      },
+    );
+  }
+
+  DropdownButtonFormField<String> _buildDropdown() {
+    return DropdownButtonFormField<String>(
+      value: tipoSaldo,
+      items: <String>['Saldo Normal', 'Saldo de Préstamo'].map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
         );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error en la transferencia, verifique los datos ingresados')),
-      );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          tipoSaldo = value!;
+        });
+      },
+      decoration: InputDecoration(
+        labelText: 'Tipo de Saldo',
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Future<void> _obtenerDetallesReceptor() async {
+    try {
+      DocumentSnapshot receptorDoc = await _firestore.collection('users').where('cedula', isEqualTo: cedulaReceptor).get().then((snapshot) => snapshot.docs.first);
+      nombreReceptor = receptorDoc['firstName'];
+      apellidoReceptor = receptorDoc['lastName'];
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al obtener detalles del receptor: $e')));
     }
+  }
+
+  void _showConfirmationDialog() {
+    String nombreOculto = _ocultarCaracteres(nombreReceptor ?? '');
+    String apellidoOculto = _ocultarCaracteres(apellidoReceptor ?? '');
+    String cedulaOculta = _ocultarCedula(cedulaReceptor);
+    String fecha = DateTime.now().toLocal().toString().split(' ')[0];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmación de Transferencia'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                Text('Detalles de la Transferencia:'),
+                Text('Nombre: $nombreOculto'),
+                Text('Apellido: $apellidoOculto'),
+                Text('Cédula: $cedulaOculta'),
+                Text('Monto: \$${monto.toStringAsFixed(2)}'),
+                Text('Fecha: $fecha'),
+                SizedBox(height: 10),
+                Text('¿Son correctos estos datos?'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                _transferirDinero();
+                Navigator.of(context).pop(); // Cerrar el diálogo después de la transferencia
+              },
+              child: Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _ocultarCaracteres(String texto) {
+    if (texto.length <= 3) return texto;
+    return '${texto.substring(0, 3)}${'*' * (texto.length - 3)}';
+  }
+
+  String _ocultarCedula(String cedula) {
+    if (cedula.length <= 2) return cedula;
+    return '${'*' * (cedula.length - 2)}${cedula.substring(cedula.length - 2)}';
+  }
+
+  Future<void> _transferirDinero() async {
+    String mensaje = await _transferenciaService.transferirDinero(cedulaReceptor, monto, contrasena, tipoSaldo);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 }
