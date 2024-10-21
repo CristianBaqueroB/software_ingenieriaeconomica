@@ -87,8 +87,8 @@ class SettingsController {
     await _auth.signOut();
 
     // Limpiar SharedPreferences al cerrar sesión
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    //SharedPreferences prefs = await SharedPreferences.getInstance();
+    //await prefs.clear();
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

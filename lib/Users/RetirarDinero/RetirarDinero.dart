@@ -120,7 +120,7 @@ class _RetiroScreenState extends State<RetiroScreen> {
 
     _showNotification('Retiro exitoso: \$${monto.toStringAsFixed(2)}');
     _montoController.clear();
-    _cedulaController.clear();
+    //_cedulaController.clear();
 
     // Guardar el detalle del retiro
     await _guardarDetalleRetiro(monto);

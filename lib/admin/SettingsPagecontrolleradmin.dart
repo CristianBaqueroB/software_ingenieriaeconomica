@@ -59,8 +59,8 @@ class SettingsControllerAdmin {
   Future<void> signOut(BuildContext context) async {
     await _auth.signOut();
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Limpia el caché al cerrar sesión
+    //SharedPreferences prefs = await SharedPreferences.getInstance();
+    //await prefs.clear(); // Limpia el caché al cerrar sesión
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

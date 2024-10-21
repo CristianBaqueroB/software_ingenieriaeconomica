@@ -251,7 +251,7 @@ class _SimpleInterestPageState extends State<SimpleInterestPage> {
           days: _days,
         );
 
-        _cedulaController.clear();
+        //_cedulaController.clear();
         _montoController.clear();
         _tasaController.clear();
         setState(() {
